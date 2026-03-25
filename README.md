@@ -5,8 +5,8 @@
 ## 🚀 Features
 - El stock se actualiza de forma segura;
 - Excepciones HTTP
-- Cada cambio de Stock se registra en "STOCK MOVEMENT"
-- Los cambios de stock ACUMULATIVOS
+- Cada cambio de Stock se registra en la base de datos.
+- Los cambios de stock son acumulativos si ya tenias determinado registro se suma o se resta.
 ## 🛠️ Tech Stack
 - Python
 - FastAPI 
