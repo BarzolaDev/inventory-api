@@ -1,29 +1,35 @@
-# Inventory Management API
+## Sistema de gestión de inventario (API REST)
 
-REST API built with FastAPI and PostgreSQL for managing products and stock.
+# Estoy CONSTRUYENDO una API De inventario con control de stock y registro de movimientos
 
 ## 🚀 Features
-- Create and list products
-- Update stock with validation (no negative stock)
-- Track stock movements for history and auditing
-
+- El stock se actualiza de forma segura;
+- Excepciones HTTP
+- Cada cambio de Stock se registra en "STOCK MOVEMENT"
+- Los cambios de stock ACUMULATIVOS
 ## 🛠️ Tech Stack
-- Python (FastAPI)
-- PostgreSQL
+- Python
+- FastAPI 
+- PostgreSQL 
 - SQLAlchemy
 
 ## 📦 Endpoints
 
-### Create Product
+### Crear producto
 POST /products
 
-### Get Products
+### Obtener producto
 GET /products
 
-### Update Stock
+### Modificar Stock
 PATCH /products/{product_id}
 
-## 🧠 Business Logic
-- Stock cannot go below zero
-- Every stock change creates a movement record
-- Ensures data consistency between products and movements
+### Stock Movement
+-> En proceso ya lo detecto y almaceno en DB 
+
+## 🧠 Lógica 
+- El stock no puede llegar a menos de 0
+- El stock se le suma al que ya tengo almacenado
+- Movimientos de STOCK
+  
+  
