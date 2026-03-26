@@ -1,35 +1,46 @@
-## Sistema de gestión de inventario (API REST)
+# 📦 Inventory Management API (FastAPI + PostgreSQL)
 
-# Estoy CONSTRUYENDO una API De inventario con control de stock y registro de movimientos
+API robusta desarrollada con **FastAPI** para la gestión de inventarios en tiempo real. Este proyecto destaca por su arquitectura modular y lógica de negocio orientada a la trazabilidad de stock.
 
-## 🚀 Features
-- El stock se actualiza de forma segura;
-- Excepciones HTTP
-- Cada cambio de Stock se registra en la base de datos.
-- Los cambios de stock son acumulativos si ya tenias determinado registro se suma o se resta.
-## 🛠️ Tech Stack
-- Python
-- FastAPI 
-- PostgreSQL 
-- SQLAlchemy
+## 🚀 Características Principales
 
-## 📦 Endpoints
+- **Arquitectura Modular:** Separación clara de responsabilidades (Models, Schemas, Routes, Database).
+- **Lógica de Stock Acumulativa:** Los movimientos de stock no solo reemplazan valores, sino que se registran de forma incremental en un historial de movimientos.
+- **Validaciones de Integridad:** Control de stock negativo.
+  - Prevención de duplicados por nombre de producto.
+  - Manejo de errores HTTP con su respectivo Detalle.
+    
+- **Persistencia:** Integración con PostgreSQL mediante SQLAlchemy.
 
-### Crear producto
-POST /products
+## 🛠️ Stack
+- **Framework:** FastAPI
+- **Database:** PostgreSQL (SQLAlchemy)
+- **Validación de Datos:** Pydantic
+- **Entorno:** Python Dotenv (Seguridad de credenciales)
 
-### Obtener producto
-GET /products
+## 📡 Endpoints
+- POST /products → Crear nuevo producto -> {"name": "mouse", "stock": 32}
+- GET /products → Obtenemos -> Obtenemos todos los productos de la db
+- PATCH /products/{id} → Actualiza el stock dependiendo si se vendio o se obtuvieron mas productos  
+- GET /products/{id}/movements → Obtenemos todos los movimientos del Producto.
 
-### Modificar Stock
-PATCH /products/{product_id}
+## 🔧 Instalación y Uso
 
-### Stock Movement
--> En proceso ya lo detecto y almaceno en DB 
+1. **Clonar el repositorio:**
+```bash
+git clone https://github.com/BarzolaDev/inventory-api.git
 
-## 🧠 Lógica 
-- El stock no puede llegar a menos de 0
-- El stock se le suma al que ya tengo almacenado
-- Movimientos de STOCK
-  
-  
+2. Crear entorno virtual:
+   python -m venv .venv
+
+3. Activar entorno:
+   .venv\Scripts\activate
+
+4. Instalar dependencias:
+   pip install -r requirements.txt
+
+5. Configurar variables de entorno:
+   Crear archivo .env basado en .env.example
+
+6. Ejecutar:
+   uvicorn main:app --reload
