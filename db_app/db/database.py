@@ -10,3 +10,9 @@ SessionLocal = sessionmaker(bind=engine)
 #todas las tablas heredan de aca
 Base = declarative_base()
 
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
