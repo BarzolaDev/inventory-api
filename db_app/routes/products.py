@@ -6,7 +6,7 @@ from db.database import get_db
 
 router = APIRouter()
 
-@router.post("/products")
+@router.post("/")
 def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     db_product = Product(name=product.name, stock=product.stock)
     db.add(db_product)
@@ -14,12 +14,12 @@ def create_product(product: ProductCreate, db: Session = Depends(get_db)):
     db.refresh(db_product)
     return db_product
 
-@router.get("/products")
+@router.get("/")
 def get_products(db: Session = Depends(get_db)):
     products = db.query(Product).all()
     return products
 
-@router.patch("/products/{product_id}")
+@router.patch("/{product_id}")
 def update_stock(product_id: int, stock_n: ProductPatch, db: Session = Depends(get_db)):
     
     product = db.query(Product).filter(Product.id == product_id).first() 
@@ -51,7 +51,7 @@ def update_stock(product_id: int, stock_n: ProductPatch, db: Session = Depends(g
 
     return product
 
-@router.get("/products/{product_id}/movements", response_model=list[MovementResponse])
+@router.get("/{product_id}/movements", response_model=list[MovementResponse])
 def get_movements(product_id: int ,db: Session = Depends(get_db)):
     db_stock_movements = db.query(StockMovement).filter(
                             StockMovement.product_id == product_id
