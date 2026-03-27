@@ -1,7 +1,7 @@
-📦 Inventory Management API
+## Inventory Management API
 Una REST API profesional desarrollada con FastAPI y PostgreSQL, enfocada en la integridad de datos, el manejo de alta concurrencia y la escalabilidad.
 
-🚀 Características Principales
+##🚀 Características Principales
 Arquitectura de Capas (Service Layer): Separación clara entre los puntos de entrada (Routes) y la lógica de negocio (Services) para un código mantenible y testeable.
 
 Control de Concurrencia (Pessimistic Locking): Implementación de with_for_update() en operaciones críticas de stock, evitando condiciones de carrera (race conditions) cuando múltiples usuarios interactúan simultáneamente.
@@ -14,7 +14,7 @@ Seguridad y Tipado: Uso exhaustivo de Pydantic para validación de esquemas y SQ
 
 Trazabilidad: Sistema de Logging configurado para monitorear errores y eventos críticos en tiempo real.
 
-🛠️ Tecnologías utilizadas
+##🛠️ Tecnologías utilizadas
 Framework: FastAPI
 
 Base de Datos: PostgreSQL
@@ -25,7 +25,7 @@ Validación: Pydantic v2
 
 Entorno: Python 3.10+
 
-📝 Próximos pasos:
+##📝 Próximos pasos:
 [ ] Implementar Autenticación JWT (OAuth2).
 
 [ ] Relación de usuarios con productos (Owner-based access).
