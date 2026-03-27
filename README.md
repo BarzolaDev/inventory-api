@@ -1,25 +1,33 @@
-# 📦 Inventory Management API (FastAPI + PostgreSQL)
+📦 Inventory Management API
+Una REST API profesional desarrollada con FastAPI y PostgreSQL, enfocada en la integridad de datos, el manejo de alta concurrencia y la escalabilidad.
 
-API robusta desarrollada con **FastAPI** para la gestión de inventarios en tiempo real. Este proyecto destaca por su arquitectura modular y lógica de negocio orientada a la trazabilidad de stock.
+🚀 Características Principales
+Arquitectura de Capas (Service Layer): Separación clara entre los puntos de entrada (Routes) y la lógica de negocio (Services) para un código mantenible y testeable.
 
-## 🚀 Características Principales
+Control de Concurrencia (Pessimistic Locking): Implementación de with_for_update() en operaciones críticas de stock, evitando condiciones de carrera (race conditions) cuando múltiples usuarios interactúan simultáneamente.
 
-- **Arquitectura Modular:** Separación clara de responsabilidades (Models, Schemas, Routes, Database).
-- **Lógica de Stock Acumulativa:** Los movimientos de stock no solo reemplazan valores, sino que se registran de forma incremental en un historial de movimientos.
-- **Validaciones de Integridad:** Control de stock negativo.
-  - Prevención de duplicados por nombre de producto.
-  - Manejo de errores HTTP con su respectivo Detalle.
-    
-- **Persistencia:** Integración con PostgreSQL mediante SQLAlchemy.
+Integridad con Transacciones ACID: Gestión de errores mediante bloques try/except/rollback, asegurando que la base de datos nunca quede en un estado inconsistente ante fallos inesperados.
 
-## 🛠️ Stack
-- **Framework:** FastAPI
-- **Database:** PostgreSQL (SQLAlchemy)
-- **Validación de Datos:** Pydantic
-- **Entorno:** Python Dotenv (Seguridad de credenciales)
+Paginación Eficiente: Consultas optimizadas con limit y offset para manejar grandes volúmenes de datos sin comprometer el rendimiento de la aplicación.
 
-## 📡 Endpoints
-- POST /products → Crear nuevo producto -> {"name": "mouse", "stock": 32}
-- GET /products → Obtenemos -> Obtenemos todos los productos de la db
-- PATCH /products/{id} → Actualiza el stock dependiendo si se vendio o se obtuvieron mas productos  
-- GET /products/{id}/movements → Obtenemos todos los movimientos del Producto.
+Seguridad y Tipado: Uso exhaustivo de Pydantic para validación de esquemas y SQLAlchemy con tipado de sesiones para un desarrollo robusto y con autocompletado.
+
+Trazabilidad: Sistema de Logging configurado para monitorear errores y eventos críticos en tiempo real.
+
+🛠️ Tecnologías utilizadas
+Framework: FastAPI
+
+Base de Datos: PostgreSQL
+
+ORM: SQLAlchemy (v2.0 style)
+
+Validación: Pydantic v2
+
+Entorno: Python 3.10+
+
+📝 Próximos pasos:
+[ ] Implementar Autenticación JWT (OAuth2).
+
+[ ] Relación de usuarios con productos (Owner-based access).
+
+[ ] Containerización con Docker y Docker Compose.
