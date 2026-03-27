@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from models.models import Product, StockMovement
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from schemas.schemas import ProductCreate, StockUpdate, MovementResponse
 from db.database import get_db
@@ -21,7 +20,7 @@ def get_products(db: Session = Depends(get_db)):
 def update_stock(product_id: int, stock_update: StockUpdate, db: Session = Depends(get_db)):
     new_stock = products_services.update_stock(product_id=product_id,
                                                 stock_update=stock_update,
-                                                db=db)
+                                                db=db) 
     return new_stock
     
 
