@@ -1,60 +1,31 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from models.models import Product, StockMovement
 from sqlalchemy.orm import Session
-from schemas.schemas import ProductCreate, ProductPatch, MovementResponse
+from schemas.schemas import ProductCreate, StockUpdate, MovementResponse
 from db.database import get_db
+from services import products_services
 
 router = APIRouter()
 
 @router.post("/")
-def create_product(product: ProductCreate, db: Session = Depends(get_db)):
-    db_product = Product(name=product.name, stock=product.stock)
-    db.add(db_product)
-    db.commit()
-    db.refresh(db_product)
-    return db_product
+def new_product(product: ProductCreate, db: Session = Depends(get_db)):
+    new_pruduct = products_services.new_product(db=db, product_data=product)
+    return new_pruduct
 
 @router.get("/")
 def get_products(db: Session = Depends(get_db)):
-    products = db.query(Product).all()
+    products = products_services.get_products(db=db)
     return products
 
 @router.patch("/{product_id}")
-def update_stock(product_id: int, stock_n: ProductPatch, db: Session = Depends(get_db)):
+def update_stock(product_id: int, stock_update: StockUpdate, db: Session = Depends(get_db)):
+    new_stock = products_services.update_stock(product_id=product_id,
+                                                stock_update=stock_update,
+                                                db=db)
+    return new_stock
     
-    product = db.query(Product).filter(Product.id == product_id).first() 
-
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail = f'El producto con id {product_id} no existe')
-
-    new_stock = stock_n.stock + product.stock
-
-    if new_stock < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Stock insuficiente para realizar la operación'
-        )
-    
-    #aca tendra que ir el stock movement 
-    movement = StockMovement(
-        product_id = product.id,
-        quantity = stock_n.stock,
-    )
-    db.add(movement)
-
-    product.stock = new_stock
-
-    db.commit()
-    db.refresh(product)
-
-    return product
 
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
 def get_movements(product_id: int ,db: Session = Depends(get_db)):
-    db_stock_movements = db.query(StockMovement).filter(
-                            StockMovement.product_id == product_id
-                            ).all()
-
-    return db_stock_movements
+    movements = products_services.get_movements(product_id=product_id, db=db)
+    return movements

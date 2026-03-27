@@ -5,7 +5,7 @@ class ProductCreate(BaseModel):
     name: str
     stock: int
 
-class ProductPatch(BaseModel):
+class StockUpdate(BaseModel):
     stock: int
 
 class MovementResponse(BaseModel):
