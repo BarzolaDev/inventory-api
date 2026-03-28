@@ -14,38 +14,45 @@ def new_product(db: Session, product_data):
         db.refresh(db_product)
         return db_product
     except Exception as e:
+        db.rollback()
         logger.error(f"Error en new_product {e}")
 
-def get_products(db: Session, skip: int = 0, limit: int = 0):
+def get_products(db: Session, skip: int = 0, limit: int = 10):
     products = db.query(Product).offset(skip).limit(limit).all()
     return products
 
 def update_stock(product_id: int, stock_update: StockUpdate, db: Session):
-    product = db.query(Product).with_for_update().filter(Product.id == product_id).first() 
-
-    if not product:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail = f'El producto con id {product_id} no existe')
-
-    new_stock = stock_update.stock + product.stock
-
-    if new_stock < 0:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='Stock insuficiente para realizar la operación'
-        )
-   
-    movement = StockMovement(
-    product_id = product.id,
-    quantity = stock_update.stock
-    )
     try:
+        product = db.query(Product).with_for_update().filter(Product.id == product_id).first() 
+
+        if not product:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail = f'El producto con id {product_id} no existe')
+
+        new_stock = stock_update.stock + product.stock
+
+        if new_stock < 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='Stock insuficiente para realizar la operación'
+            )
+   
+        movement = StockMovement(
+        product_id = product.id,
+        quantity = stock_update.stock
+        )
+
         product.stock = new_stock
         db.add(movement)
         db.commit()
         db.refresh(product)
         return product
+    
+    except HTTPException as he: 
+        db.rollback()
+        raise he
+
     except Exception as e:
         db.rollback()
         logger.error(f"Error subiendo stock: {e}")
