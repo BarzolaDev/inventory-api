@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from schemas.schemas import ProductCreate, StockUpdate, MovementResponse
+from schemas.schemas import ProductCreate, MovementResponse, MovementCreate,Product
 from db.database import get_db
 from services import products_services
 
@@ -16,12 +16,14 @@ def get_products(db: Session = Depends(get_db)):
     products = products_services.get_products(db=db)
     return products
 
-@router.patch("/{product_id}")
-def update_stock(product_id: int, stock_update: StockUpdate, db: Session = Depends(get_db)):
-    new_stock = products_services.update_stock(product_id=product_id,
-                                                stock_update=stock_update,
-                                                db=db) 
-    return new_stock
+@router.post("/products/{product_id}/stock", response_model=Product)
+def update_product_stock(
+    product_id: int, 
+    movement: MovementCreate, 
+    db: Session = Depends(get_db)
+):
+    # Llamamos a tu service blindado
+    return products_services.update_stock(product_id=product_id, movement_data=movement, db=db)
     
 
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])

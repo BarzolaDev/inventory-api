@@ -1,15 +1,46 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
+from typing import List, Optional
 
-class ProductCreate(BaseModel): 
+class UserBase(BaseModel):
+    username: str
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str = Field(..., min_length=8)
+
+class User(UserBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ProductBase(BaseModel):
     name: str
-    stock: int
+    description: Optional[str] = None
+    stock: int = 0
 
-class StockUpdate(BaseModel):
-    stock: int
+class ProductCreate(ProductBase):
+    pass 
 
-class MovementResponse(BaseModel):
+class Product(ProductBase):
+    id: int
+    owner_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class MovementBase(BaseModel):
     quantity: int
+    type: str 
+
+class MovementCreate(MovementBase):
+    product_id: int
+
+class MovementResponse(MovementBase):
+    id: int
     created_at: datetime
 
     class Config:
