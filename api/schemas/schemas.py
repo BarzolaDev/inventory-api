@@ -9,7 +9,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
 
-class User(UserBase):
+class UserResponse(UserBase):
     id: int
 
     class Config:

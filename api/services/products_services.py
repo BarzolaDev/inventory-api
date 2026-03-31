@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status 
 from models import models
 from schemas import schemas 
 from sqlalchemy.orm import Session
@@ -18,13 +18,13 @@ def new_product(db: Session, product_data):
         logger.error(f"Error en new_product {e}")
 
 def get_products(db: Session, skip: int = 0, limit: int = 10):
-    products = db.query(schemas.Product).offset(skip).limit(limit).all()
+    products = db.query(models.Product).offset(skip).limit(limit).all()
     return products
 
 def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Session):
     try:
         # El portero bloquea la fila
-        product = db.query(schemas.Product).with_for_update().filter(schemas.Product.id == product_id).first() 
+        product = db.query(models.Product).with_for_update().filter(schemas.Product.id == product_id).first() 
 
         if not product:
             raise HTTPException(
