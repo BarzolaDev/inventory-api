@@ -24,7 +24,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
 def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Session):
     try:
         # El portero bloquea la fila
-        product = db.query(models.Product).with_for_update().filter(schemas.Product.id == product_id).first() 
+        product = db.query(models.Product).with_for_update().filter(models.Product.id == product_id).first() 
 
         if not product:
             raise HTTPException(

@@ -10,3 +10,4 @@ router = APIRouter()
 def register_user(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
     # El router NO sabe hashear, solo llama al que sabe
     return users_service.create_new_user(db=db, user_data=user_in)
+
