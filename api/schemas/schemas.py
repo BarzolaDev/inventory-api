@@ -1,21 +1,19 @@
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-# Molde compartido
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-# Esto es el modelo inicial?
+
 class UserCreate(UserBase):
     password: str = Field(..., min_length=8)
-# Lo que devolvemos y tenemos el id del JWT
+
 class UserResponse(UserBase):
     id: int
 
     class Config:
         from_attributes = True
-
 
 class ProductBase(BaseModel):
     name: str
