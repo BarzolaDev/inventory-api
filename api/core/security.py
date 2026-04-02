@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from passlib.context import CryptContext
 from datetime import timezone
 
+
 load_dotenv()
 
 pwd_context = CryptContext(schemes=["argon2"],
@@ -38,9 +39,9 @@ def create_access_token(data: dict):
 def verify_token(token: str):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
+        user_id: str = payload.get("sub")
         
-        if email is None:
+        if user_id is None:
             return None
             
         return payload

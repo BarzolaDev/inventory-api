@@ -23,7 +23,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
 
 def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Session):
     try:
-        # El portero bloquea la fila
+        # Por estas decisiones te diste cuenta que tenes el nivel...  CREETELA PORQUE PODES EXPLICAR todo
         product = db.query(models.Product).with_for_update().filter(models.Product.id == product_id).first() 
 
         if not product:
@@ -43,8 +43,7 @@ def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Ses
 
         movement = models.StockMovement(
             product_id = product.id,
-            quantity = movement_data.quantity,
-            type = movement_data.type  
+            quantity = movement_data.quantity
         )
 
         product.stock = new_stock
@@ -64,8 +63,23 @@ def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Ses
             detail='No se pudo registrar el movimiento'
         )
         
+def delete_product(product_id: int, db: Session):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+
+    if not product:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"El producto con id {product_id} no existe"
+        )
+
+    db.delete(product)
+    db.commit()
+    return product
+
+
 def get_movements(product_id: int, db: Session):
     db_stock_movements = db.query(models.StockMovement).filter(
                             models.StockMovement.product_id == product_id
                             ).all()
     return db_stock_movements
+

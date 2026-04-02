@@ -17,7 +17,6 @@ class UserResponse(UserBase):
 
 class ProductBase(BaseModel):
     name: str
-    description: Optional[str] = None
     stock: int = 0
 
 class ProductCreate(ProductBase):
@@ -25,20 +24,14 @@ class ProductCreate(ProductBase):
 
 class Product(ProductBase):
     id: int
-    owner_id: int
 
     class Config:
         from_attributes = True
 
-
-class MovementBase(BaseModel):
+class MovementCreate(BaseModel):
     quantity: int
-    type: str 
 
-class MovementCreate(MovementBase):
-    product_id: int
-
-class MovementResponse(MovementBase):
+class MovementResponse(MovementCreate):
     id: int
     created_at: datetime
 

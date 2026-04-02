@@ -3,7 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from schemas import schemas
 from services import users_service, auth_service
+from models import models
 from db.database import get_db
+from core.depends import get_current_user 
 
 
 router = APIRouter()
@@ -20,4 +22,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         password_plain=form_data.password,
         db=db
     )
+
+@router.get("/me", response_model=schemas.UserResponse)
+def read_current_user(current_user: models.User = Depends(get_current_user)):
+    return current_user
 
