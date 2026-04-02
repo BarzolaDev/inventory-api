@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from routes import users
 from db.database import engine, Base
 from routes import products, users
 

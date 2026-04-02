@@ -33,7 +33,7 @@ class StockMovement(Base):
     id = Column(Integer, primary_key=True, index=True)
     product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False)
     quantity = Column(Integer, nullable=False) 
-    type = Column(String) # 'sale', 'restock', etc.
+    type = Column(String, nullable= False) 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     product = relationship("Product", back_populates="movements")

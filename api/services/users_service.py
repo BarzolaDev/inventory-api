@@ -3,10 +3,9 @@ from sqlalchemy.orm import Session
 from models import models 
 from schemas import schemas
 from sqlalchemy.exc import SQLAlchemyError
-from core.security import HashHelper
 from fastapi import HTTPException, status
+from core.security import create_access_token, get_password_hash, verify_password
 
-#Logger
 logger = logging.getLogger(__name__)
 
 def create_new_user(db: Session, user_data: schemas.UserCreate):
@@ -20,17 +19,15 @@ def create_new_user(db: Session, user_data: schemas.UserCreate):
         )
 
     try:
-    # 1. Hasheamos la password que viene del esquema
-        hashed_pass = HashHelper.get_password_hash(user_data.password)
+        hashed_pass = get_password_hash(user_data.password)
     
-    # 2. Creamos el modelo de DB
         db_user = models.User(
             email=user_data.email,
             username=user_data.username,
             hashed_password=hashed_pass
         )
     
-    # 3. Guardamos
+
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
@@ -43,7 +40,34 @@ def create_new_user(db: Session, user_data: schemas.UserCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error interno del servidor al crear usuario"
         )
+
+
+def authenticate_user(email: str, password_plain: str, db: Session) -> dict :
+
+    user = db.query(models.User).filter(models.User.email == email).first()
     
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    is_verified = verify_password(password_plain, user.hashed_password)
+    
+    if not is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales inválidas",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
 
 
 

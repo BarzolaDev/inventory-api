@@ -32,7 +32,6 @@ def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Ses
                 detail=f'El producto con id {product_id} no existe'
             )
 
-        # Usamos .quantity que es como lo llamaste en el Schema
         new_stock = product.stock + movement_data.quantity
 
         if new_stock < 0:
@@ -41,11 +40,11 @@ def update_stock(product_id: int, movement_data: schemas.MovementCreate, db: Ses
                 detail='Stock insuficiente para realizar la operación'
             )
    
-        # Creamos el registro del movimiento
+
         movement = models.StockMovement(
             product_id = product.id,
             quantity = movement_data.quantity,
-            type = movement_data.type  # ¡No te olvides del tipo!
+            type = movement_data.type  
         )
 
         product.stock = new_stock
