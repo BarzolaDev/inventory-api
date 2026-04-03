@@ -11,7 +11,7 @@ Con el tiempo entendí que estos mismos principios se aplican directamente en el
 
 ### 🔹 Cosas a implementar (qué tenian significado y yo ya implementaba por conocimiento puro):
 
-# Testing Manejo de errores y edge cases
+Testing Manejo de errores y edge cases
 
 ## 🧠 Decisiones y aprendizaje
 
