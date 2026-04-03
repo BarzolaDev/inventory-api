@@ -1,14 +1,17 @@
 ## Estoy terminando el proyecto 
 
-Mi camino en programación no fue lineal. Durante varios años exploré distintas tecnologías como HTML, CSS, JavaScript y SQL, enfrentándome a desafíos como la búsqueda de perfección y la falta de enfoque en proyectos completos.
-Este proceso me permitió entender no solo cómo escribir código, sino también cómo pensar sistemas, organizar ideas y priorizar la construcción de soluciones reales.
+Mi camino en programación no fue lineal. Durante varios años exploré distintas tecnologías como HTML, CSS, JavaScript y JQuery enfrentándome a desafíos como la búsqueda de perfección y la falta de enfoque en proyectos completos.
+Después de varias idas y vueltas este proceso me permitió entender no solo cómo escribir código, sino también cómo pensar sistemas, organizar ideas y priorizar la construcción de soluciones reales.
 Este proyecto representa un punto de inflexión, donde logré consolidar esos aprendizajes en una aplicación backend con una arquitectura más clara y orientada a problemas reales.
 Antes de incorporar formalmente conceptos como testing o manejo de edge cases mientras iba desarrollando la api yo ya pensaba en esos casos por la lógica que venia plantando en
-SQL y resolviendo problemas en plataformas como Codewars.
+SQL y resolviendo problemas en plataformas como Codewars (Pyhthon y JS).
 El uso de SQL me permitió entender escenarios como validaciones, integridad de datos y manejo de errores a nivel de consultas (joins, constraints, transacciones).
 Por otro lado, la práctica en Codewars me ayudó a desarrollar pensamiento lógico y a considerar distintos escenarios posibles para un mismo problema.
 Con el tiempo entendí que estos mismos principios se aplican directamente en el desarrollo backend, especialmente en testing y en la anticipación de edge cases.
 
+### 🔹 Cosas a implementar (qué tenian significado y yo ya implementaba por conocimiento puro):
+
+# Testing Manejo de errores y edge cases
 
 ## 🧠 Decisiones y aprendizaje
 
@@ -59,9 +62,7 @@ Esto me permitió enfocarme en la lógica del negocio y dejar de verlo como una 
 Ahora se que puedo manejar cualquier framework de mi lenguaje las bases son las mismas.
 
 
-### 🔹 Cosas a implementar (qué tenian significado y yo ya implementaba por conocimiento puro):
 
-### Testing Manejo de errores y edge cases
 
 
 
