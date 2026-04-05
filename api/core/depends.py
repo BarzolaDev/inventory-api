@@ -3,7 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from core.security import verify_token
 from db.database import get_db
-from models import models
+from services import users_service
+from models import user_model
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -11,7 +12,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
-):
+) -> user_model.User:
+
     payload = verify_token(token)
 
     if payload is None:
@@ -21,7 +23,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    user_id = payload.get("sub")  
+    user_id = payload.get("sub")
 
     if user_id is None:
         raise HTTPException(
@@ -29,11 +31,19 @@ def get_current_user(
             detail="Token inválido",
         )
 
-    user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+    try:
+        user_id = int(user_id)
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido",
+        )
+
+    user = users_service.get_user_by_id(db, user_id)
 
     if user is None:
         raise HTTPException(
-            status_code=404,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario no encontrado",
         )
 

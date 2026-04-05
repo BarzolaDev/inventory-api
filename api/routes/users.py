@@ -1,29 +1,40 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from schemas import schemas
+from schemas.user_schema import UserCreate, UserResponse
+from schemas import auth_schema 
 from services import users_service, auth_service
-from models import models
 from db.database import get_db
-from core.depends import get_current_user 
-
+from models import user_model
+from core import depends
 
 router = APIRouter()
 
-@router.post("/", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED)
-def register_user(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    return users_service.create_new_user(db=db, user_data=user_in)
 
+# 🔹 REGISTER
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
+    try:
+        return users_service.create_new_user(db=db, user_data=user_in)
 
-@router.post("/login")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Error creating user"
+        )
+
+# 🔹 LOGIN
+@router.post("/login", response_model= auth_schema.TokenResponse)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     return auth_service.authenticate_user(
-        email=form_data.username, 
+        email=form_data.username,
         password_plain=form_data.password,
         db=db
     )
 
-@router.get("/me", response_model=schemas.UserResponse)
-def read_current_user(current_user: models.User = Depends(get_current_user)):
+@router.get("/me", response_model=UserResponse)
+def read_current_user(current_user: user_model.User = Depends(depends.get_current_user)):
     return current_user
-

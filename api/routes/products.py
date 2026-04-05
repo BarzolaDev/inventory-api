@@ -1,35 +1,68 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from schemas.schemas import ProductCreate, MovementResponse, MovementCreate, Product
-from models import models
+from schemas.product_schema import ProductCreate, Product
+from schemas.movement_schema import MovementCreate, MovementResponse
 from db.database import get_db
-from services import products_services
-from core.depends import get_current_user 
+from services import products_service
+from core.depends import get_current_user
 
 router = APIRouter()
 
-router = APIRouter()
 
+# 🔹 CREATE
 @router.post("/", response_model=Product)
 def new_product(product: ProductCreate, db: Session = Depends(get_db)):
-    return products_services.new_product(db=db, product_data=product)
+    try:
+        return products_service.new_product(db=db, product_data=product)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Error creating product"
+        )
 
+
+# 🔹 READ
 @router.get("/", response_model=list[Product])
 def get_products(db: Session = Depends(get_db)):
-    return products_services.get_products(db=db)
+    return products_service.get_products(db=db)
 
+
+# 🔹 UPDATE STOCK
 @router.post("/{product_id}/stock", response_model=Product)
-def update_product_stock(product_id: int, movement: MovementCreate, db: Session = Depends(get_db)):
-    return products_services.update_stock(product_id=product_id, movement_data=movement, db=db)
+def update_product_stock(
+    product_id: int,
+    movement: MovementCreate,
+    db: Session = Depends(get_db)
+):
+    try:
+        return products_service.update_stock(
+            product_id=product_id,
+            movement_data=movement,
+            db=db
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Error updating stock"
+        )
 
+
+# 🔹 DELETE
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user)
 ):
-    products_services.delete_product(product_id=product_id, db=db)
+    try:
+        products_service.delete_product(product_id=product_id, db=db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
+
+# 🔹 MOVEMENTS
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
 def get_movements(product_id: int, db: Session = Depends(get_db)):
-    return products_services.get_movements(product_id=product_id, db=db)
+    return products_service.get_movements(product_id=product_id, db=db)
