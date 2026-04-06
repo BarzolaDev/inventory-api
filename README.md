@@ -31,6 +31,15 @@ La arquitectura está pensada para escalar y adaptarse a entornos reales.
 
 ---
 
+## 🧠 Decisiones técnicas
+
+- Se utiliza `SELECT FOR UPDATE` para evitar race conditions en la actualización de stock.
+- La lógica de negocio está separada de la capa HTTP mediante services.
+- Se implementan excepciones de dominio para desacoplar la lógica de negocio del framework.
+- Se utilizan transacciones para garantizar consistencia en operaciones críticas.
+
+---
+
 ## ⚡ Concurrencia y consistencia
 
 - Uso de `SELECT FOR UPDATE` para evitar condiciones de carrera
@@ -42,7 +51,7 @@ La arquitectura está pensada para escalar y adaptarse a entornos reales.
 ## ⚠️ Manejo de errores
 
 - Validaciones de negocio (ej: stock insuficiente)
-- Uso de excepciones controladas (`ValueError`)
+- Uso de excepciones de dominio para manejo de errores
 - Traducción a respuestas HTTP adecuadas
 - Rollback automático en caso de error
 
@@ -76,6 +85,15 @@ pip install -r requirements.txt
 ## 3. Ejercutar servidor
 
 uvicorn api.main:app --reload
+
+## 📌 Endpoints principales
+
+- `POST /users` → registro
+- `POST /users/login` → autenticación (JWT)
+- `GET /products` → listar productos (público)
+- `POST /products` → crear producto (auth)
+- `POST /products/{id}/stock` → actualizar stock
+- `DELETE /products/{id}` → eliminar producto
 
 ## 🧠 Arquitectura
 
@@ -116,12 +134,15 @@ api/
 
 El proyecto incluye tests sobre la lógica de negocio utilizando `pytest`.
 
+⚠️ Nota: Los tests utilizan SQLite en memoria para mayor velocidad y aislamiento.
+Algunas funcionalidades como locks pueden comportarse diferente en PostgreSQL.
+
 ### Cobertura actual:
 
-- ✅ Creación de productos  
-- ✅ Actualización de stock  
-- ❗ Validación de errores (edge cases)  
-- ❗ Prevención de stock negativo  
+- Creación de productos  
+- Actualización de stock  
+- Validación de errores (edge cases)  
+- Prevención de stock negativo  
 
 Ejecutar tests:
 
