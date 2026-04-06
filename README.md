@@ -49,6 +49,18 @@ La arquitectura está pensada para escalar y adaptarse a entornos reales.
 
 ## ▶️ Correr el proyecto
 
+### 🔑 Endpoints y Autenticación
+
+El sistema cuenta con protección de rutas mediante **JWT (JSON Web Tokens)**:
+
+* **Públicos:** * `GET /products`: Permite visualizar el stock disponible sin necesidad de estar autenticado.
+* **Privados:** * Todos los demás endpoints (POST, PUT, DELETE y gestión de movimientos) requieren registro e inicio de sesión.
+    
+**Cómo usar la autorización:**
+Para probar los endpoints protegidos, debés incluir el token en el header de la siguiente forma:
+`Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpX...`
+
+
 ### 1. Crear entorno virtual
 
 ```bash
