@@ -21,7 +21,7 @@ La arquitectura está pensada para escalar y adaptarse a entornos reales.
 
 ## 🚀 Features
 
-- 🔐 Autenticación con JWT (OAuth2 Password Flow)
+- 🔐 Autenticación con JWT (Auth)
 - 📦 Gestión de productos y stock
 - 🔄 Registro de movimientos de inventario
 - ⚠️ Validación de reglas de negocio (stock no negativo)
