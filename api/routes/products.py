@@ -5,13 +5,24 @@ from schemas.movement_schema import MovementCreate, MovementResponse
 from db.database import get_db
 from services import products_service
 from core.depends import get_current_user
+from models.user_model import User
 
 router = APIRouter()
 
 
+# 🔹 READ 
+@router.get("/", response_model=list[Product])
+def get_products(db: Session = Depends(get_db)):
+    return products_service.get_products(db=db)
+
+
 # 🔹 CREATE
 @router.post("/", response_model=Product)
-def new_product(product: ProductCreate, db: Session = Depends(get_db)):
+def new_product(
+    product: ProductCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     try:
         return products_service.new_product(db=db, product_data=product)
     except Exception:
@@ -21,18 +32,13 @@ def new_product(product: ProductCreate, db: Session = Depends(get_db)):
         )
 
 
-# 🔹 READ
-@router.get("/", response_model=list[Product])
-def get_products(db: Session = Depends(get_db)):
-    return products_service.get_products(db=db)
-
-
-# 🔹 UPDATE STOCK
+# 🔹 UPDATE STOCK 
 @router.post("/{product_id}/stock", response_model=Product)
 def update_product_stock(
     product_id: int,
     movement: MovementCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         return products_service.update_stock(
@@ -49,12 +55,12 @@ def update_product_stock(
         )
 
 
-# 🔹 DELETE
+# 🔹 DELETE 
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     try:
         products_service.delete_product(product_id=product_id, db=db)
@@ -62,7 +68,11 @@ def delete_product(
         raise HTTPException(status_code=404, detail=str(e))
 
 
-# 🔹 MOVEMENTS
+# 🔹 MOVEMENTS 
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
-def get_movements(product_id: int, db: Session = Depends(get_db)):
+def get_movements(
+    product_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     return products_service.get_movements(product_id=product_id, db=db)

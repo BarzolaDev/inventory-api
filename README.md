@@ -1,59 +1,96 @@
-### 🔐 Autenticación y dependencias
+# 🚀 Inventory API – FastAPI + PostgreSQL
 
-Uno de los principales desafíos fue implementar autenticación usando OAuth2 con PasswordBearer.
+API backend para gestión de inventario con control de stock, concurrencia y lógica de negocio consistente.
 
-Al trabajar con dependencias como `Depends(get_current_user)`, el código comenzó a volverse difícil de escalar. Esto me llevó a refactorizar y mejorar:
-
-* Separación de responsabilidades
-* Organización en módulos (routes, services, etc.)
-* Naming claro de funciones
+Diseñada con foco en claridad, mantenibilidad y escenarios reales de producción.
 
 ---
 
-### 🗄️ SQL vs ORM
+## 📦 Overview
 
-Al principio sentía que usar un ORM era empezar desde cero, después de haber trabajado tanto con SQL.
+Este proyecto implementa un sistema de gestión de inventario que permite:
 
-Sin embargo, entendí que:
+- Crear y administrar productos
+- Registrar movimientos de stock
+- Mantener consistencia de datos
+- Evitar estados inválidos (ej: stock negativo)
 
-> Un ORM no reemplaza SQL, lo abstrae.
-
-Este fue uno de los mayores puntos de aprendizaje del proyecto, ya que pude aplicar mis conocimientos desde un nivel más alto.
-
----
-
-### 🔄 Flujos y naming
-
-Comprendí la importancia de:
-
-* Diseñar correctamente los flujos del sistema
-* Nombrar funciones y estructuras de forma clara
-
-Esto impacta directamente en la mantenibilidad y escalabilidad del código.
+La arquitectura está pensada para escalar y adaptarse a entornos reales.
 
 ---
 
-### 🧩 Rol del framework
+---
 
-Inicialmente veía el framework como una limitación.
+## ▶️ Correr el proyecto
 
-Con el tiempo entendí que:
+### 1. Crear entorno virtual
 
-> Un framework abstrae problemas comunes para que puedas enfocarte en la lógica de negocio.
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
+```
 
-Hoy sé que puedo adaptarme a cualquier framework porque las bases son las mismas.
+## 2. Instalar las dependencias 
+
+pip install -r requirements.txt
+
+## 3. Ejercutar servidor
+
+uvicorn api.main:app --reload
+
+## 🧠 Arquitectura
+
+El proyecto sigue una estructura por capas:
+api/
+
+```bash
+api/
+├── routes/     → endpoints HTTP
+├── services/   → lógica de negocio
+├── models/     → ORM (SQLAlchemy)
+├── schemas/    → validación (Pydantic)
+├── tests/      → testing (Pytest)
+├── core/       → config y dependencias
+```
+
+### 🔹 Principios aplicados
+
+- Separación de responsabilidades  
+- Lógica desacoplada de la capa HTTP  
+- Código orientado a mantenibilidad  
+- Diseño basado en casos reales  
 
 ---
 
-## 💡 Conclusión
+## ⚙️ Stack tecnológico
 
-Este proyecto no solo representa una API funcional, sino un cambio en mi forma de pensar el desarrollo:
+- Python
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Pydantic
+- Pytest
 
-* Pasar de escribir código a diseñar soluciones
-* Entender abstracciones (ORMs, frameworks)
-* Construir con foco en escalabilidad y claridad
+---
 
-Y, sobre todo, comprobar que puedo resolver problemas de manera correcta.
+## 🧪 Testing
+
+El proyecto incluye tests sobre la lógica de negocio utilizando `pytest`.
+
+### Cobertura actual:
+
+- ✅ Creación de productos  
+- ✅ Actualización de stock  
+- ❗ Validación de errores (edge cases)  
+- ❗ Prevención de stock negativo  
+
+Ejecutar tests:
+
+```bash
+pytest
+```
+
 
 
 

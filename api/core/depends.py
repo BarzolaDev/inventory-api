@@ -6,7 +6,7 @@ from db.database import get_db
 from services import users_service
 from models import user_model
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 
 def get_current_user(
@@ -46,5 +46,4 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Usuario no encontrado",
         )
-
     return user

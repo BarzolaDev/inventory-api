@@ -42,5 +42,6 @@ def create_new_user(db: Session, user_data: UserCreate):
         logger.exception("Unexpected error creating user")
         raise
 
+
 def get_user_by_id(db: Session, user_id: int):
     return db.query(user_model.User).filter(user_model.User.id == user_id).first()

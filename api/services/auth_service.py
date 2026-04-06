@@ -26,8 +26,8 @@ def authenticate_user(email: str, password_plain: str, db: Session) -> dict :
     
     access_token = create_access_token(data={"sub": str(user.id)})
     
+    
     return TokenResponse(
-    access_token=access_token,
-    token_type="bearer"
+    access_token=access_token
     )
 

@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from schemas.user_schema import UserCreate, UserResponse
 from schemas import auth_schema 
@@ -27,14 +26,18 @@ def register_user(user_in: UserCreate, db: Session = Depends(get_db)):
         )
 
 # 🔹 LOGIN
-@router.post("/login", response_model= auth_schema.TokenResponse)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@router.post("/login", response_model=auth_schema.TokenResponse)
+def login(user: auth_schema.LoginRequest, db: Session = Depends(get_db)):
     return auth_service.authenticate_user(
-        email=form_data.username,
-        password_plain=form_data.password,
+        email=user.email,
+        password_plain=user.password,
         db=db
     )
 
-@router.get("/me", response_model=UserResponse)
-def read_current_user(current_user: user_model.User = Depends(depends.get_current_user)):
-    return current_user
+
+
+
+
+
+
+
