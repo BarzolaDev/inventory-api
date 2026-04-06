@@ -19,7 +19,33 @@ La arquitectura está pensada para escalar y adaptarse a entornos reales.
 
 ---
 
+## 🚀 Features
+
+- 🔐 Autenticación con JWT (OAuth2 Password Flow)
+- 📦 Gestión de productos y stock
+- 🔄 Registro de movimientos de inventario
+- ⚠️ Validación de reglas de negocio (stock no negativo)
+- 🔒 Protección de endpoints con usuario autenticado
+- 🧪 Testing de lógica de negocio con pytest
+- 🧠 Manejo de errores y rollback en transacciones
+
 ---
+
+## ⚡ Concurrencia y consistencia
+
+- Uso de `SELECT FOR UPDATE` para evitar condiciones de carrera
+- Manejo de transacciones con commit / rollback
+- Garantía de consistencia en operaciones críticas de stock
+
+---
+
+## ⚠️ Manejo de errores
+
+- Validaciones de negocio (ej: stock insuficiente)
+- Uso de excepciones controladas (`ValueError`)
+- Traducción a respuestas HTTP adecuadas
+- Rollback automático en caso de error
+
 
 ## ▶️ Correr el proyecto
 
