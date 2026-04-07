@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from schemas.product_schema import ProductCreate, Product
-from schemas.movement_schema import MovementCreate, MovementResponse
+from api.schemas.product_schema import ProductCreate, Product
+from api.schemas.movement_schema import MovementCreate, MovementResponse
 
-from db.database import get_db
-from services import products_service
-from core.depends import get_current_user
-from models.user_model import User
+from api.db.database import get_db
+from api.services import products_service
+from api.core.depends import get_current_user
+from api.models.user_model import User
 
 router = APIRouter()
 

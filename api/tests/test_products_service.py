@@ -1,4 +1,4 @@
-from services.products_service import (
+from api.services.products_service import (
     create_product,
     update_stock,
     delete_product,

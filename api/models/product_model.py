@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 
-from db.database import Base
+from api.db.database import Base
 
 
 class Product(Base):

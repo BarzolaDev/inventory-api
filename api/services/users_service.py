@@ -2,9 +2,9 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import user_model
-from schemas.user_schema import UserCreate
-from core.security import get_password_hash
+from api.models import user_model
+from api.schemas.user_schema import UserCreate
+from api.core.security import get_password_hash
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,8 @@ def create_user(db: Session, user_data: UserCreate):
 
     if existing_user:
         raise UserAlreadyExistsError("Email already registered")
+    
+    
 
     hashed_password = get_password_hash(user_data.password)
 

@@ -2,9 +2,9 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import product_model, stock_movement_model
-from schemas.product_schema import ProductCreate
-from schemas.movement_schema import MovementCreate
+from api.models import product_model, stock_movement_model
+from api.schemas.product_schema import ProductCreate
+from api.schemas.movement_schema import MovementCreate
 
 logger = logging.getLogger(__name__)
 

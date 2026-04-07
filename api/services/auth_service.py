@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
-from models import user_model
-from schemas.auth_schema import TokenResponse
-from core.security import create_access_token, verify_password
+from api.models import user_model
+from api.schemas.auth_schema import TokenResponse
+from api.core.security import create_access_token, verify_password
 
 
 class InvalidCredentialsError(Exception):

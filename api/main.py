@@ -1,15 +1,10 @@
 from fastapi import FastAPI
-from db.database import engine, Base
-from routes import products, users
-import models 
+from api.db.database import engine, Base
+from api.routes import products, users
+from api import models
 
 app = FastAPI()
 
-from fastapi import FastAPI
-from db.database import engine, Base
-from routes import products, users
-
-app = FastAPI()
 
 app.include_router(
     products.router,
