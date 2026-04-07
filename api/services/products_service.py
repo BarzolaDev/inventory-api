@@ -47,7 +47,6 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
 # 🔹 UPDATE (stock)
 def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
     try:
-        # 🔒 Lock para evitar race conditions
         product = (
             db.query(product_model.Product)
             .filter(product_model.Product.id == product_id)

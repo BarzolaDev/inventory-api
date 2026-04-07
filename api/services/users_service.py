@@ -13,14 +13,13 @@ logger = logging.getLogger(__name__)
 class UserAlreadyExistsError(Exception):
     pass
 
-
 class UserNotFoundError(Exception):
     pass
 
 
 # 🔹 CREATE
 def create_user(db: Session, user_data: UserCreate):
-    # 🔍 Verificar si el email ya existe
+
     existing_user = (
         db.query(user_model.User)
         .filter(user_model.User.email == user_data.email)

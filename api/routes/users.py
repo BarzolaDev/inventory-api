@@ -33,7 +33,7 @@ def register_user(
             detail=str(e)
         )
 
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error"

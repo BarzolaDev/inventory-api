@@ -18,7 +18,6 @@ if not SECRET_KEY:
     raise RuntimeError("SECRET_KEY is not set")
 
 
-# 🔐 Password hashing config
 pwd_context = CryptContext(
     schemes=["argon2"],
     deprecated="auto",
@@ -36,7 +35,6 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-# 🔹 JWT
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
 
