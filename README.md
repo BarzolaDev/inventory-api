@@ -11,14 +11,6 @@ El sistema está pensado para evitar estados inválidos (como stock negativo) in
 
 ---
 
-## 🌐 Live Demo
-
-👉 https://inventory-api-jpwh.onrender.com/docs
-
-Podés explorar los endpoints desde Swagger y probar el flujo completo.
-
----
-
 ## 🧠 Problemas que aborda
 
 * Race conditions al actualizar stock
