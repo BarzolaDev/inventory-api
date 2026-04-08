@@ -1,156 +1,98 @@
-# 🚀 Inventory API – FastAPI + PostgreSQL
+# 🚀 Inventory API  
+### Backend que no se rompe cuando las cosas se ponen reales
 
-API backend para gestión de inventario con control de stock, concurrencia y lógica de negocio consistente.
+Sistema de gestión de inventario diseñado para algo que muchos ignoran:
 
-Diseñada con foco en claridad, mantenibilidad y escenarios reales de producción.
+👉 **la consistencia de datos bajo concurrencia**
+
+No es un CRUD.  
+Es un sistema que asegura que el stock nunca entra en estados inválidos, incluso bajo múltiples operaciones simultáneas.
 
 ---
 
 ## 🌐 Live Demo
 
-👉 [https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
+👉 https://inventory-api-jpwh.onrender.com/docs  
 
-Podés probar todos los endpoints directamente desde Swagger.
-
-## 📸 Preview
-
-![Swagger](./docs/swagger.png)
+Explorá los endpoints directamente desde Swagger y probá el flujo completo con autenticación.
 
 ---
 
-## 📦 Overview
+## ⚡ ¿Por qué este proyecto no es “uno más”?
 
-Este proyecto implementa un sistema de gestión de inventario que permite:
+La mayoría de APIs de inventario:
 
-* Crear y administrar productos
-* Registrar movimientos de stock
-* Mantener consistencia de datos
-* Evitar estados inválidos (ej: stock negativo)
+- actualizan stock directamente  
+- no manejan concurrencia  
+- confían en inputs  
+- rompen bajo presión  
 
-La arquitectura está pensada para escalar y adaptarse a entornos reales.
-
----
-
-## 🚀 Features
-
-* 🔐 Autenticación con JWT (Auth)
-* 📦 Gestión de productos y stock
-* 🔄 Registro de movimientos de inventario
-* ⚠️ Validación de reglas de negocio (stock no negativo)
-* 🔒 Protección de endpoints con usuario autenticado
-* 🧪 Testing de lógica de negocio con pytest
-* 🧠 Manejo de errores y rollback en transacciones
+👉 **Este proyecto no.**
 
 ---
 
-## 🧠 Decisiones técnicas
+## 🧠 Problemas reales que resuelve
 
-* Se utiliza `SELECT FOR UPDATE` para evitar race conditions en la actualización de stock.
-* La lógica de negocio está separada de la capa HTTP mediante services.
-* Se implementan excepciones de dominio para desacoplar la lógica de negocio del framework.
-* Se utilizan transacciones para garantizar consistencia en operaciones críticas.
+- ❌ Race conditions al actualizar stock  
+- ❌ Estados inválidos (stock negativo)  
+- ❌ Inconsistencia en operaciones concurrentes  
+- ❌ Lógica de negocio acoplada al framework  
+
+✔️ Solucionados con decisiones concretas de diseño
 
 ---
 
-## ⚡ Concurrencia y consistencia
+## 🔥 Features clave
 
-* Uso de `SELECT FOR UPDATE` para evitar condiciones de carrera
-* Manejo de transacciones con commit / rollback
-* Garantía de consistencia en operaciones críticas de stock
+- 🔐 Autenticación con JWT  
+- 📦 Gestión de productos  
+- 🔄 Sistema de movimientos de stock  
+- ⚠️ Validaciones de negocio estrictas  
+- 🔒 Protección de endpoints  
+- 🧪 Testing sobre lógica crítica  
+- 🧠 Manejo de errores + rollback automático  
+
+---
+
+## ⚔️ Decisiones técnicas (lo importante de verdad)
+
+Este proyecto no se trata de “usar tecnologías”, sino de **cómo usarlas**:
+
+- Se utiliza `SELECT FOR UPDATE` para bloquear filas y evitar condiciones de carrera  
+- Se implementan transacciones para garantizar atomicidad  
+- La lógica de negocio vive en `services/`, no en los endpoints  
+- Se usan excepciones de dominio para desacoplar reglas del framework  
+
+👉 Esto permite escalar el sistema sin convertirlo en un caos.
+
+---
+
+## 🧵 Concurrencia y consistencia
+
+Cuando múltiples requests intentan modificar el mismo recurso:
+
+- 🔒 Lock a nivel base de datos (`SELECT FOR UPDATE`)  
+- 🔁 Transacciones con commit / rollback  
+- ⚖️ Consistencia garantizada  
+
+👉 El sistema prioriza integridad por sobre velocidad ingenua.
 
 ---
 
 ## ⚠️ Manejo de errores
 
-* Validaciones de negocio (ej: stock insuficiente)
-* Uso de excepciones de dominio para manejo de errores
-* Traducción a respuestas HTTP adecuadas
-* Rollback automático en caso de error
+No hay errores “silenciosos”:
+
+- validaciones explícitas (ej: stock insuficiente)  
+- excepciones de dominio claras  
+- traducción a respuestas HTTP coherentes  
+- rollback automático ante fallos  
 
 ---
 
-## 🔑 Endpoints y Autenticación
+## 🔑 Autenticación
 
-El sistema cuenta con protección de rutas mediante **JWT (JSON Web Tokens)**:
-
-* **Públicos:**
-  `GET /products` → Permite visualizar el stock disponible sin autenticación.
-
-* **Privados:**
-  Todos los demás endpoints requieren registro e inicio de sesión.
-
-**Cómo usar la autorización:**
-
-```
-Authorization: Bearer <tu_token>
-```
-
----
-
-## 📌 Endpoints principales
-
-* `POST /users` → registro
-* `POST /users/login` → autenticación (JWT)
-* `GET /products` → listar productos (público)
-* `POST /products` → crear producto (auth)
-* `POST /products/{id}/stock` → actualizar stock
-* `DELETE /products/{id}` → eliminar producto
-
----
-
-## 🧠 Arquitectura
-
-El proyecto sigue una estructura por capas:
-
-```
-api/
-├── routes/     → endpoints HTTP
-├── services/   → lógica de negocio
-├── models/     → ORM (SQLAlchemy)
-├── schemas/    → validación (Pydantic)
-├── tests/      → testing (Pytest)
-├── core/       → config y dependencias
-```
-
-### 🔹 Principios aplicados
-
-* Separación de responsabilidades
-* Lógica desacoplada de la capa HTTP
-* Código orientado a mantenibilidad
-* Diseño basado en casos reales
-
----
-
-## ⚙️ Stack tecnológico
-
-* Python
-* FastAPI
-* SQLAlchemy
-* PostgreSQL
-* Pydantic
-* Pytest
-
----
-
-## 🧪 Testing
-
-El proyecto incluye tests sobre la lógica de negocio utilizando `pytest`.
-
-⚠️ Nota: Los tests utilizan SQLite en memoria para mayor velocidad y aislamiento.
-Algunas funcionalidades como locks pueden comportarse diferente en PostgreSQL.
-
-### Cobertura actual:
-
-* Creación de productos
-* Actualización de stock
-* Validación de errores (edge cases)
-* Prevención de stock negativo
-
-Ejecutar tests:
+Sistema basado en JWT:
 
 ```bash
-pytest
-```
-
-
-
+Authorization: Bearer <token>
