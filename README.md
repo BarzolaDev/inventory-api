@@ -1,98 +1,68 @@
-# 🚀 Inventory API  
-### Backend que no se rompe cuando las cosas se ponen reales
+## 🚀 Inventory API
 
-Sistema de gestión de inventario diseñado para algo que muchos ignoran:
+**Backend orientado a consistencia bajo concurrencia**
 
-👉 **la consistencia de datos bajo concurrencia**
+Sistema de gestión de inventario diseñado para abordar un problema común en backend:
 
-No es un CRUD.  
-Es un sistema que asegura que el stock nunca entra en estados inválidos, incluso bajo múltiples operaciones simultáneas.
+👉 la consistencia de datos bajo operaciones concurrentes
+
+No es un CRUD tradicional.
+El sistema está pensado para evitar estados inválidos (como stock negativo) incluso cuando múltiples requests operan al mismo tiempo.
 
 ---
 
 ## 🌐 Live Demo
 
-👉 https://inventory-api-jpwh.onrender.com/docs  
+👉 https://inventory-api-jpwh.onrender.com/docs
 
-Explorá los endpoints directamente desde Swagger y probá el flujo completo con autenticación.
-
----
-
-## ⚡ ¿Por qué este proyecto no es “uno más”?
-
-La mayoría de APIs de inventario:
-
-- actualizan stock directamente  
-- no manejan concurrencia  
-- confían en inputs  
-- rompen bajo presión  
-
-👉 **Este proyecto no.**
+Podés explorar los endpoints desde Swagger y probar el flujo completo.
 
 ---
 
-## 🧠 Problemas reales que resuelve
+## 🧠 Problemas que aborda
 
-- ❌ Race conditions al actualizar stock  
-- ❌ Estados inválidos (stock negativo)  
-- ❌ Inconsistencia en operaciones concurrentes  
-- ❌ Lógica de negocio acoplada al framework  
-
-✔️ Solucionados con decisiones concretas de diseño
+* Race conditions al actualizar stock
+* Estados inválidos (ej: stock negativo)
+* Inconsistencia en operaciones concurrentes
+* Lógica de negocio acoplada al framework
 
 ---
 
-## 🔥 Features clave
+## 🔥 Features
 
-- 🔐 Autenticación con JWT  
-- 📦 Gestión de productos  
-- 🔄 Sistema de movimientos de stock  
-- ⚠️ Validaciones de negocio estrictas  
-- 🔒 Protección de endpoints  
-- 🧪 Testing sobre lógica crítica  
-- 🧠 Manejo de errores + rollback automático  
+* Autenticación con JWT
+* Gestión de productos
+* Sistema de movimientos de stock
+* Validaciones de negocio
+* Testing de lógica crítica
+* Manejo de errores con rollback
+* Registro de movimientos de stock con consistencia en operaciones concurrentes
 
 ---
 
-## ⚔️ Decisiones técnicas (lo importante de verdad)
+## ⚔️ Decisiones técnicas
 
-Este proyecto no se trata de “usar tecnologías”, sino de **cómo usarlas**:
-
-- Se utiliza `SELECT FOR UPDATE` para bloquear filas y evitar condiciones de carrera  
-- Se implementan transacciones para garantizar atomicidad  
-- La lógica de negocio vive en `services/`, no en los endpoints  
-- Se usan excepciones de dominio para desacoplar reglas del framework  
-
-👉 Esto permite escalar el sistema sin convertirlo en un caos.
+* Uso de `SELECT FOR UPDATE` para evitar condiciones de carrera
+* Transacciones para garantizar atomicidad
+* Separación de lógica de negocio en `services/`
+* Uso de excepciones de dominio
 
 ---
 
 ## 🧵 Concurrencia y consistencia
 
-Cuando múltiples requests intentan modificar el mismo recurso:
+Cuando múltiples requests modifican el mismo recurso:
 
-- 🔒 Lock a nivel base de datos (`SELECT FOR UPDATE`)  
-- 🔁 Transacciones con commit / rollback  
-- ⚖️ Consistencia garantizada  
-
-👉 El sistema prioriza integridad por sobre velocidad ingenua.
+* Lock a nivel base de datos (`SELECT FOR UPDATE`)
+* Transacciones con commit / rollback
+* Registro consistente de movimientos de stock
+* Validaciones para mantener integridad
 
 ---
 
 ## ⚠️ Manejo de errores
 
-No hay errores “silenciosos”:
-
-- validaciones explícitas (ej: stock insuficiente)  
-- excepciones de dominio claras  
-- traducción a respuestas HTTP coherentes  
-- rollback automático ante fallos  
-
----
-
-## 🔑 Autenticación
-
-Sistema basado en JWT:
-
-```bash
-Authorization: Bearer <token>
+* Validaciones explícitas (ej: stock insuficiente)
+* Excepciones de dominio
+* Respuestas HTTP coherentes
+* Rollback automático ante fallos
