@@ -13,9 +13,16 @@ from api.schemas.movement import MovementCreate
 import pytest
 
 
+PRODUCT_DEFAULTS = dict(
+    unit="kg",
+    purchase_price="5.00",
+    sale_price="10.00"
+)
+
+
 # 🔹 CREATE
 def test_create_product(db):
-    data = ProductCreate(name="Test", stock=10)
+    data = ProductCreate(name="Test", stock=10, **PRODUCT_DEFAULTS)
 
     product = create_product(db, data)
 
@@ -34,7 +41,7 @@ def test_update_stock_product_not_found(db):
 
 # 🔹 UPDATE - insufficient stock
 def test_update_stock_insufficient(db):
-    product = create_product(db, ProductCreate(name="Test", stock=5))
+    product = create_product(db, ProductCreate(name="Test", stock=5, **PRODUCT_DEFAULTS))
 
     movement = MovementCreate(quantity=-10)
 
@@ -44,7 +51,7 @@ def test_update_stock_insufficient(db):
 
 # 🔹 UPDATE - ok
 def test_update_stock_ok(db):
-    product = create_product(db, ProductCreate(name="Test", stock=5))
+    product = create_product(db, ProductCreate(name="Test", stock=5, **PRODUCT_DEFAULTS))
 
     movement = MovementCreate(quantity=10)
 

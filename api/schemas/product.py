@@ -18,7 +18,7 @@ class ProductUpdate(BaseModel):
     purchase_price: Decimal | None = Field(default=None, ge=0, decimal_places=2)
     sale_price: Decimal | None = Field(default=None, ge=0, decimal_places=2)
 
-class ProductResponse(ProductBase):
+class Product(ProductBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 

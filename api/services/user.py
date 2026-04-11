@@ -2,7 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from api.models import user
+from api.models.user import User
 from api.schemas.user import UserCreate
 from api.core.security import get_password_hash
 
@@ -21,19 +21,17 @@ class UserNotFoundError(Exception):
 def create_user(db: Session, user_data: UserCreate):
 
     existing_user = (
-        db.query(user.User)
-        .filter(user.User.email == user_data.email)
+        db.query(User)
+        .filter(User.email == user_data.email)
         .first()
     )
 
     if existing_user:
         raise UserAlreadyExistsError("Email already registered")
-    
-    
 
     hashed_password = get_password_hash(user_data.password)
 
-    db_user = user.User(
+    db_user = User(
         email=user_data.email,
         username=user_data.username,
         hashed_password=hashed_password
@@ -53,13 +51,13 @@ def create_user(db: Session, user_data: UserCreate):
 
 # 🔹 READ
 def get_user_by_id(db: Session, user_id: int):
-    user = (
-        db.query(user.User)
-        .filter(user.User.id == user_id)
+    db_user = (
+        db.query(User)
+        .filter(User.id == user_id)
         .first()
     )
 
-    if not user:
+    if not db_user:
         raise UserNotFoundError("User not found")
 
-    return user
+    return db_user

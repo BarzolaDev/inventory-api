@@ -14,13 +14,3 @@ def commit_and_refresh(db, obj, action: str = "operation"):
         db.rollback()
         logger.exception(f"Database error during {action}")
         raise
-
-def commit_and_refresh(db, obj, action: str = "operation"):
-    try:
-        db.delete(obj)
-        db.commit(obj)
-        return obj
-    except SQLAlchemyError:
-        db.rollback()
-        logger.exception(f"Database error during {action}")
-        raise
