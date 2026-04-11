@@ -3,8 +3,8 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
-from api.services import users_service
-from api.models.user_model import User
+from api.services import user
+from api.models.user import User
 from api.core.security import verify_token
 
 
@@ -36,8 +36,8 @@ def get_current_user(
         )
 
     try:
-        user = users_service.get_user_by_id(db=db, user_id=user_id)
-    except users_service.UserNotFoundError:
+        user = user.get_user_by_id(db=db, user_id=user_id)
+    except user.UserNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",

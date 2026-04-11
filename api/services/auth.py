@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from api.models import user_model
-from api.schemas.auth_schema import TokenResponse
+from api.models import user
+from api.schemas.auth import TokenResponse
 from api.core.security import create_access_token, verify_password
 
 
@@ -9,8 +9,8 @@ class InvalidCredentialsError(Exception):
 
 def authenticate_user(email: str, password_plain: str, db: Session) -> TokenResponse:
     user = (
-        db.query(user_model.User)
-        .filter(user_model.User.email == email)
+        db.query(user.User)
+        .filter(user.User.email == email)
         .first()
     )
 

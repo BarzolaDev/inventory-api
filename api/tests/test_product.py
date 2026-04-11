@@ -1,4 +1,4 @@
-from api.services.products_service import (
+from api.services.product import (
     create_product,
     update_stock,
     delete_product,
@@ -7,8 +7,8 @@ from api.services.products_service import (
     InsufficientStockError
 )
 
-from schemas.product_schema import ProductCreate
-from schemas.movement_schema import MovementCreate
+from api.schemas.product import ProductCreate
+from api.schemas.movement import MovementCreate
 
 import pytest
 

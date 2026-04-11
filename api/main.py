@@ -1,18 +1,19 @@
 from fastapi import FastAPI
 from api.db.database import engine, Base
-from api.routes import products, users
+from api.routes import product, user
 from api import models
 
 app = FastAPI()
 
 
 app.include_router(
-    products.router,
+    product.router,
     prefix="/products",
     tags=["Products"]
 )
+
 app.include_router(
-    users.router,
+    user.router,
     prefix="/users",
     tags=["Users"]
 )

@@ -2,9 +2,11 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from api.models import product_model, stock_movement_model
-from api.schemas.product_schema import ProductCreate
-from api.schemas.movement_schema import MovementCreate
+
+from api.models import movement, product
+from api.schemas.product import ProductCreate
+from api.schemas.movement import MovementCreate
+from api.utils.db_utils import commit_and_refresh
 
 logger = logging.getLogger(__name__)
 
@@ -20,24 +22,15 @@ class InsufficientStockError(Exception):
 
 # 🔹 CREATE
 def create_product(db: Session, product_data: ProductCreate):
-    db_product = product_model.Product(**product_data.model_dump())
-
-    try:
-        db.add(db_product)
-        db.commit()
-        db.refresh(db_product)
-        return db_product
-
-    except SQLAlchemyError:
-        db.rollback()
-        logger.exception("Database error creating product")
-        raise
+    db_product = product.Product(**product_data.model_dump())
+    
+    return commit_and_refresh(db, db_product, action="create_product")
 
 
 # 🔹 READ
 def get_products(db: Session, skip: int = 0, limit: int = 10):
     return (
-        db.query(product_model.Product)
+        db.query(product.Product)
         .offset(skip)
         .limit(limit)
         .all()
@@ -48,8 +41,8 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
 def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
     try:
         product = (
-            db.query(product_model.Product)
-            .filter(product_model.Product.id == product_id)
+            db.query(product.Product)
+            .filter(product.Product.id == product_id)
             .with_for_update()
             .first()
         )
@@ -62,7 +55,7 @@ def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
         if new_stock < 0:
             raise InsufficientStockError("Insufficient stock")
 
-        movement = stock_movement_model.StockMovement(
+        movement = movement.StockMovement(
             product_id=product.id,
             quantity=movement_data.quantity
         )
@@ -84,8 +77,8 @@ def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
 # 🔹 DELETE
 def delete_product(product_id: int, db: Session):
     product = (
-        db.query(product_model.Product)
-        .filter(product_model.Product.id == product_id)
+        db.query(product.Product)
+        .filter(product.Product.id == product_id)
         .first()
     )
 
@@ -105,7 +98,7 @@ def delete_product(product_id: int, db: Session):
 # 🔹 MOVEMENTS
 def get_movements(product_id: int, db: Session):
     return (
-        db.query(stock_movement_model.StockMovement)
-        .filter(stock_movement_model.StockMovement.product_id == product_id)
+        db.query(movement.StockMovement)
+        .filter(movement.StockMovement.product_id == product_id)
         .all()
     )
