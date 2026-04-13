@@ -9,6 +9,8 @@ https://inventory-api-jpwh.onrender.com/docs
 
 Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT.
 
+![Swagger UI](docs/swagger.png)
+
 ---
 
 ## 🧰 Stack
