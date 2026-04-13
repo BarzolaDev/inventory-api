@@ -1,41 +1,64 @@
-# Inventory API
+# 📦 Inventory API
 
 REST API de gestión de inventario construida con FastAPI y PostgreSQL.
 
-## Demo
+## 🚀 Demo
 
-API deployada en Render: https://inventory-api-jpwh.onrender.com/docs Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT.
+API deployada en Render:  
+https://inventory-api-jpwh.onrender.com/docs
 
-## Stack
+Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT.
 
-- **FastAPI** — framework web
-- **SQLAlchemy** — ORM
-- **PostgreSQL** — base de datos
-- **Pydantic** — validación de datos
-- **Argon2** — hashing de contraseñas
-- **JWT** — autenticación
+---
 
-## Arquitectura
+## 🧰 Stack
 
-El proyecto aplica separación de responsabilidades en capas:
+| Tecnología | Uso |
+|------------|-----|
+| **FastAPI** | Framework web |
+| **SQLAlchemy** | ORM |
+| **PostgreSQL** | Base de datos |
+| **Pydantic** | Validación de datos |
+| **Argon2** | Hashing de contraseñas |
+| **JWT** | Autenticación |
 
+---
+
+## 🏗️ Arquitectura
+
+Separación en capas:
+
+```
 routes/     → recibe HTTP, delega a services, maneja errores HTTP
 services/   → lógica de negocio, lanza excepciones de dominio
 models/     → modelos ORM
 schemas/    → validación de entrada/salida con Pydantic
+```
 
+---
+
+## ⚙️ Variables de entorno
+
+Creá un archivo `.env` en la raíz del proyecto:
+
+```env
 DATABASE_URL=postgresql://user:password@host:port/dbname
 SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
 
-### Con Docker
+---
+
+## ▶️ Cómo correr el proyecto
+
+### 🐳 Con Docker
 
 ```bash
 docker compose up --build
 ```
 
-### Local
+### 💻 Local
 
 ```bash
 python -m venv .venv
@@ -48,15 +71,19 @@ uvicorn api.main:app --reload
 
 Documentación interactiva disponible en `http://localhost:8000/docs`
 
-## Endpoints
+---
+
+## 🔌 Endpoints
 
 ### Usuarios
+
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/users/register` | Registro de usuario |
 | POST | `/users/login` | Login — devuelve Bearer token |
 
 ### Productos
+
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
 | GET | `/products/` | No | Listar productos |
@@ -67,9 +94,11 @@ Documentación interactiva disponible en `http://localhost:8000/docs`
 | POST | `/products/{id}/stock` | Sí | Actualizar stock |
 | GET | `/products/{id}/movements` | Sí | Historial de movimientos |
 
-Los movimientos de stock usan cantidad con signo: positivo = ingreso, negativo = retiro.
+> Los movimientos de stock usan cantidad con signo: **positivo = ingreso**, **negativo = retiro**.
 
-## Tests
+---
+
+## 🧪 Tests
 
 ```bash
 pytest api/tests/
@@ -77,7 +106,9 @@ pytest api/tests/
 
 Los tests corren contra una base de datos SQLite en memoria, aislada por función.
 
-## Decisiones técnicas
+---
+
+## 🔍 Decisiones técnicas
 
 - **`SELECT FOR UPDATE`** en mutaciones de stock para prevenir race conditions bajo escrituras concurrentes
 - **Excepciones de dominio tipadas** (`ProductNotFoundError`, `InsufficientStockError`) en la capa de servicios — las rutas las mapean a códigos HTTP
