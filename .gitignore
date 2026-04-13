@@ -9,3 +9,4 @@ test.db
 *.sqlite3
 .claude
 CLAUDE.md
+.pytest_cache/
