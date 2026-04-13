@@ -29,6 +29,14 @@ SECRET_KEY=your-secret-key
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 
+### Con Docker
+
+```bash
+docker compose up --build
+```
+
+### Local
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate  # Unix
