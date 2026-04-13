@@ -10,3 +10,4 @@ test.db
 .claude
 CLAUDE.md
 .pytest_cache/
+.env.docker
