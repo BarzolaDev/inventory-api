@@ -20,6 +20,8 @@ class ProductNotFoundError(Exception):
 class InsufficientStockError(Exception):
     pass
 
+class InvalidPriceError(Exception):
+    pass
 
 # 🔹 CREATE
 def create_product(db: Session, product_data: ProductCreate):
@@ -65,6 +67,9 @@ def update_product(product_id: int, product_data: ProductUpdate, db: Session):
     changes = product_data.model_dump(exclude_unset=True)
     for field, value in changes.items():
         setattr(db_product, field, value)
+
+    if db_product.sale_price <= db_product.purchase_price:
+        raise InvalidPriceError("sale_price must be grater than purchase_price")
 
     return commit_and_refresh(db, db_product, action="update_product")
 
