@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from api.models.product import Product
 from api.models.movement import StockMovement
-from api.schemas.product import ProductCreate
+from api.schemas.product import ProductCreate, ProductUpdate
 from api.schemas.movement import MovementCreate
 from api.utils.db_utils import commit_and_refresh
 
@@ -36,6 +36,37 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
         .limit(limit)
         .all()
     )
+
+# READ BY ID 
+def get_product_by_id(product_id: int, db: Session):
+    db_product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .first()
+    )
+
+    if not db_product:
+        raise ProductNotFoundError("Product not found")
+    
+    return db_product
+
+
+# 🔹 UPDATE (fields)
+def update_product(product_id: int, product_data: ProductUpdate, db: Session):
+    db_product = (
+        db.query(Product)
+        .filter(Product.id == product_id)
+        .first()
+    )
+
+    if not db_product:
+        raise ProductNotFoundError("Product not found")
+
+    changes = product_data.model_dump(exclude_unset=True)
+    for field, value in changes.items():
+        setattr(db_product, field, value)
+
+    return commit_and_refresh(db, db_product, action="update_product")
 
 
 # 🔹 UPDATE (stock)

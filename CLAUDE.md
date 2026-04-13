@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Instrucciones generales
+- Responde siempre en español
+- No toques services/ salvo que yo lo pida explicitamente
+
 ## Project Overview
 
 Inventory management REST API built with FastAPI + SQLAlchemy (PostgreSQL). Supports user registration/login with JWT auth and product stock management with audited movements.
@@ -71,6 +75,3 @@ api/
 
 **Test isolation:** Tests hit service functions directly with a real (SQLite in-memory) DB. The `db` fixture drops all tables after each test.
 
-### Known issue
-
-`api/utils/db_utils.py` defines `commit_and_refresh` twice — the second definition (which calls `db.delete`) silently overrides the first. The first definition (add/commit/refresh) is the one actually needed by `services/product.py`.
