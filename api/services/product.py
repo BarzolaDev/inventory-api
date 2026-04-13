@@ -37,7 +37,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
         .all()
     )
 
-# READ BY ID 
+# 🔹READ BY ID 
 def get_product_by_id(product_id: int, db: Session):
     db_product = (
         db.query(Product)

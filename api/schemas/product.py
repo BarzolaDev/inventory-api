@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from decimal import Decimal
 
 class ProductBase(BaseModel):
@@ -7,6 +7,11 @@ class ProductBase(BaseModel):
     unit: str = Field(min_length=1, max_length=20)
     purchase_price: Decimal = Field(ge=0, decimal_places=2)
     sale_price: Decimal = Field(ge=0, decimal_places=2)
+    @model_validator(mode="after")
+    def sale_price_must_be_grater(self):
+        if self.sale_price <= self.purchase_price:
+            raise ValueError("sale_price must be greater than purchase_price")
+        return self
 
 class ProductCreate(ProductBase):
     pass
