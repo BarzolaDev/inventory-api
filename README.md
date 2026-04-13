@@ -1,6 +1,10 @@
 # Inventory API
 
-REST API de gestión de inventario construida con FastAPI y PostgreSQL. Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT.
+REST API de gestión de inventario construida con FastAPI y PostgreSQL.
+
+## Demo
+
+API deployada en Render: https://inventory-api-jpwh.onrender.com/docs Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT.
 
 ## Stack
 
