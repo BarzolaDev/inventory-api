@@ -69,7 +69,7 @@ def update_product(product_id: int, product_data: ProductUpdate, db: Session):
         setattr(db_product, field, value)
 
     if db_product.sale_price <= db_product.purchase_price:
-        raise InvalidPriceError("sale_price must be grater than purchase_price")
+        raise InvalidPriceError("sale_price must be greater than purchase_price")
 
     return commit_and_refresh(db, db_product, action="update_product")
 
