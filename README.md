@@ -68,6 +68,7 @@ source .venv/bin/activate  # Unix
 .venv\Scripts\activate     # Windows
 
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn api.main:app --reload
 ```
 
@@ -106,7 +107,23 @@ Documentación interactiva disponible en `http://localhost:8000/docs`
 pytest api/tests/
 ```
 
-Los tests apuntan directamente a la capa de servicios sin pasar por HTTP, cubriendo happy paths y edge cases de producto, usuario y autenticación. Corren contra una base de datos SQLite en memoria, aislada por función.
+Dos niveles de cobertura:
+- **Tests de servicio** — llaman directo a la lógica de negocio, cubren happy paths y edge cases
+- **Tests HTTP** — usan `TestClient` para verificar status codes, response schemas y autenticación en los endpoints
+
+Corren contra una base de datos SQLite en memoria, aislada por función.
+
+---
+
+## 🗄️ Migraciones
+
+```bash
+# Aplicar migraciones pendientes
+alembic upgrade head
+
+# Generar migración después de cambiar un modelo
+alembic revision --autogenerate -m "descripcion del cambio"
+```
 
 ---
 
