@@ -88,7 +88,7 @@ Documentación interactiva disponible en `http://localhost:8000/docs`
 
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
-| GET | `/products/` | No | Listar productos |
+| GET | `/products/` | No | Listar productos (soporta paginación con `skip` y `limit`) |
 | GET | `/products/{id}` | No | Obtener producto |
 | POST | `/products/` | Sí | Crear producto |
 | PATCH | `/products/{id}` | Sí | Actualizar producto |
