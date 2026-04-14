@@ -1,7 +1,5 @@
 from fastapi import FastAPI
-from api.db.database import engine, Base
 from api.routes import product, user
-from api import models
 
 app = FastAPI()
 
@@ -17,8 +15,6 @@ app.include_router(
     prefix="/users",
     tags=["Users"]
 )
-
-Base.metadata.create_all(bind=engine)
 
 
 
