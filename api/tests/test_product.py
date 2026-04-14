@@ -87,7 +87,7 @@ def test_get_movements(db):
     assert len(movements) == 2
 
 
-def test_get_product_by_id(db):
+def test_get_product_by_id_not_found(db):
     with pytest.raises(ProductNotFoundError):
         get_product_by_id(9999, db)
 
