@@ -21,10 +21,9 @@ TestingSessionLocal = sessionmaker(
 
 @pytest.fixture(scope="function")
 def db():
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-
-    try:
+    Base.metadata.create_all(bind=engine) 
+    db = TestingSessionLocal()            
+    try:                                    
         yield db
     finally:
         db.close()
