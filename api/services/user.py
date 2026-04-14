@@ -20,11 +20,15 @@ class UserNotFoundError(Exception):
 # 🔹 CREATE
 def create_user(db: Session, user_data: UserCreate):
 
-    existing_user = (
-        db.query(User)
-        .filter(User.email == user_data.email)
-        .first()
-    )
+    try:
+        existing_user = (
+            db.query(User)
+            .filter(User.email == user_data.email)
+            .first()
+        )
+    except SQLAlchemyError:
+        logger.exception("Database error checking existing user")
+        raise
 
     if existing_user:
         raise UserAlreadyExistsError("Email already registered")
@@ -51,11 +55,15 @@ def create_user(db: Session, user_data: UserCreate):
 
 # 🔹 READ
 def get_user_by_id(db: Session, user_id: int):
-    db_user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
+    try:
+        db_user = (
+            db.query(User)
+            .filter(User.id == user_id)
+            .first()
+        )
+    except SQLAlchemyError:
+        logger.exception("Database error fetching user by id")
+        raise
 
     if not db_user:
         raise UserNotFoundError("User not found")

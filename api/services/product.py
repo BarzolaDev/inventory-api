@@ -32,24 +32,32 @@ def create_product(db: Session, product_data: ProductCreate):
 
 # 🔹 READ
 def get_products(db: Session, skip: int = 0, limit: int = 10):
-    return (
-        db.query(Product)
-        .offset(skip)
-        .limit(limit)
-        .all()
-    )
+    try:
+        return (
+            db.query(Product)
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+    except SQLAlchemyError:
+        logger.exception("Database error fetching products")
+        raise
 
-# 🔹READ BY ID 
+# 🔹READ BY ID
 def get_product_by_id(product_id: int, db: Session):
-    db_product = (
-        db.query(Product)
-        .filter(Product.id == product_id)
-        .first()
-    )
+    try:
+        db_product = (
+            db.query(Product)
+            .filter(Product.id == product_id)
+            .first()
+        )
+    except SQLAlchemyError:
+        logger.exception("Database error fetching product by id")
+        raise
 
     if not db_product:
         raise ProductNotFoundError("Product not found")
-    
+
     return db_product
 
 
@@ -134,8 +142,12 @@ def delete_product(product_id: int, db: Session):
 
 # 🔹 MOVEMENTS
 def get_movements(product_id: int, db: Session):
-    return (
-        db.query(StockMovement)
-        .filter(StockMovement.product_id == product_id)
-        .all()
-    )
+    try:
+        return (
+            db.query(StockMovement)
+            .filter(StockMovement.product_id == product_id)
+            .all()
+        )
+    except SQLAlchemyError:
+        logger.exception("Database error fetching movements")
+        raise
