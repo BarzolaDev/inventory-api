@@ -106,12 +106,14 @@ Documentación interactiva disponible en `http://localhost:8000/docs`
 pytest api/tests/
 ```
 
-Los tests corren contra una base de datos SQLite en memoria, aislada por función.
+Los tests apuntan directamente a la capa de servicios sin pasar por HTTP, cubriendo happy paths y edge cases de producto, usuario y autenticación. Corren contra una base de datos SQLite en memoria, aislada por función.
 
 ---
 
 ## 🔍 Decisiones técnicas
 
 - **`SELECT FOR UPDATE`** en mutaciones de stock para prevenir race conditions bajo escrituras concurrentes
+- **Stock no puede ser negativo** — el servicio valida que el resultado de cada movimiento sea `>= 0` antes de persistir
+- **`sale_price` debe ser mayor que `purchase_price`** — validado en el schema al crear y en el servicio al actualizar
 - **Excepciones de dominio tipadas** (`ProductNotFoundError`, `InsufficientStockError`) en la capa de servicios — las rutas las mapean a códigos HTTP
 - **Argon2** para hashing de contraseñas en lugar de bcrypt, por ser el ganador de Password Hashing Competition
