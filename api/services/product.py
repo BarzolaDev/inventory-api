@@ -143,6 +143,15 @@ def delete_product(product_id: int, db: Session):
 # 🔹 MOVEMENTS
 def get_movements(product_id: int, db: Session):
     try:
+        db_product = db.query(Product).filter(Product.id == product_id).first()
+    except SQLAlchemyError:
+        logger.exception("Database error fetching movements")
+        raise
+
+    if not db_product:
+        raise ProductNotFoundError("Product not found")
+
+    try:
         return (
             db.query(StockMovement)
             .filter(StockMovement.product_id == product_id)

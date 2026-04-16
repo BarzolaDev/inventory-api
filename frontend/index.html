@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventario</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
+    <h1 class="text-lg font-bold text-gray-800">Inventario</h1>
+    <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-700 font-medium">Cerrar sesión</button>
+  </nav>
+
+  <main class="max-w-5xl mx-auto px-4 py-8">
+    <div class="flex justify-end mb-4">
+      <div class="flex gap-3">
+        <a href="stock.html"
+          class="bg-green-600 hover:bg-green-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+          Mover stock
+        </a>
+        <a href="create_product.html"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors">
+          + Nuevo producto
+        </a>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorMsg" class="hidden mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3"></div>
+
+    <!-- Tabla -->
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+      <table class="w-full text-sm text-left">
+        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-6 py-3">Nombre</th>
+            <th class="px-6 py-3">Unidad</th>
+            <th class="px-6 py-3">Stock</th>
+            <th class="px-6 py-3">Precio compra</th>
+            <th class="px-6 py-3">Precio venta</th>
+          </tr>
+        </thead>
+        <tbody id="productTable" class="divide-y divide-gray-100">
+          <tr id="loadingRow">
+            <td colspan="5" class="px-6 py-6 text-center text-gray-400">Cargando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    // Si no hay token, mandamos al login
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+
+    async function loadProducts() {
+      const errorMsg = document.getElementById('errorMsg');
+      const tbody = document.getElementById('productTable');
+
+      try {
+        const res = await fetch(`${API_BASE}/products/`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        if (!res.ok) throw new Error('Error al cargar los productos');
+
+        const products = await res.json();
+
+        if (products.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-6 py-6 text-center text-gray-400">No hay productos</td>
+            </tr>`;
+          return;
+        }
+
+        tbody.innerHTML = products.map(p => `
+          <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location='product.html?id=${p.id}'">
+            <td class="px-6 py-4 font-medium text-gray-800">${p.name}</td>
+            <td class="px-6 py-4 text-gray-600">${p.unit}</td>
+            <td class="px-6 py-4">
+              <span class="px-2 py-1 rounded-full text-xs font-semibold ${p.stock === 0 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}">
+                ${p.stock}
+              </span>
+            </td>
+            <td class="px-6 py-4 text-gray-600">$${p.purchase_price}</td>
+            <td class="px-6 py-4 text-gray-600">$${p.sale_price}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.remove('hidden');
+        tbody.innerHTML = '';
+      }
+    }
+
+    loadProducts();
+  </script>
+
+</body>
+</html>

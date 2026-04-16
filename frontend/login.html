@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center">
+
+  <div class="bg-white rounded-2xl shadow-md w-full max-w-sm p-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Iniciar sesión</h1>
+
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          placeholder="usuario@email.com"
+          required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1" for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          required
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div id="errorMsg" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2"></div>
+
+      <button
+        type="submit"
+        id="submitBtn"
+        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg py-2 text-sm transition-colors"
+      >
+        Entrar
+      </button>
+    </form>
+    <p class="text-center text-sm text-gray-500 mt-4">
+      ¿No tenés cuenta? <a href="register.html" class="text-blue-600 hover:underline">Registrate</a>
+    </p>
+  </div>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+
+    const form = document.getElementById('loginForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      errorMsg.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Ingresando...';
+
+      const body = new URLSearchParams({
+        username: document.getElementById('email').value,
+        password: document.getElementById('password').value,
+      });
+
+      try {
+        const res = await fetch(`${API_BASE}/users/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body,
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.detail || 'Credenciales inválidas');
+        }
+
+        const { access_token } = await res.json();
+        localStorage.setItem('token', access_token);
+        window.location.href = 'index.html';
+
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Entrar';
+      }
+    });
+  </script>
+
+</body>
+</html>

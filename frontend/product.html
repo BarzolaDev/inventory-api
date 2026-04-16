@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle del producto</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+  <!-- Navbar -->
+  <nav class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
+    <a href="index.html" class="text-sm text-blue-600 hover:text-blue-800 font-medium">← Volver</a>
+    <h1 class="text-lg font-bold text-gray-800">Detalle del producto</h1>
+    <button id="logoutBtn" class="text-sm text-red-500 hover:text-red-700 font-medium">Cerrar sesión</button>
+  </nav>
+
+  <main class="max-w-2xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- Info del producto -->
+    <div id="productCard" class="hidden bg-white rounded-2xl shadow-md p-6">
+      <div class="flex justify-between items-start">
+        <div>
+          <h2 id="productName" class="text-xl font-bold text-gray-800"></h2>
+          <p id="productUnit" class="text-sm text-gray-500 mt-1"></p>
+        </div>
+        <div class="flex gap-2">
+          <a id="editBtn" href="#"
+            class="text-sm bg-yellow-100 hover:bg-yellow-200 text-yellow-800 font-medium px-3 py-1 rounded-lg transition-colors">
+            Editar
+          </a>
+          <button id="deleteBtn"
+            class="text-sm bg-red-100 hover:bg-red-200 text-red-700 font-medium px-3 py-1 rounded-lg transition-colors">
+            Eliminar
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mt-6">
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-xs text-gray-500">Stock</p>
+          <p id="productStock" class="text-lg font-bold text-gray-800"></p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-xs text-gray-500">Precio compra</p>
+          <p id="productPurchase" class="text-lg font-bold text-gray-800"></p>
+        </div>
+        <div class="bg-gray-50 rounded-lg p-3 text-center">
+          <p class="text-xs text-gray-500">Precio venta</p>
+          <p id="productSale" class="text-lg font-bold text-gray-800"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Historial de movimientos -->
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+      <div class="px-6 py-4 border-b">
+        <h3 class="font-semibold text-gray-800">Historial de movimientos</h3>
+      </div>
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+          <tr>
+            <th class="px-6 py-3 text-left">Fecha</th>
+            <th class="px-6 py-3 text-left">Tipo</th>
+            <th class="px-6 py-3 text-left">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody id="movementsTable" class="divide-y divide-gray-100">
+          <tr>
+            <td colspan="3" class="px-6 py-6 text-center text-gray-400">Cargando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="errorMsg" class="hidden text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3"></div>
+
+  </main>
+
+  <script>
+    const API_BASE = 'http://localhost:8000';
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+    if (!productId) window.location.href = 'index.html';
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    });
+
+    async function loadProduct() {
+      const errorMsg = document.getElementById('errorMsg');
+      try {
+        const res = await fetch(`${API_BASE}/products/${productId}`);
+        if (!res.ok) throw new Error('Producto no encontrado');
+        const p = await res.json();
+
+        document.getElementById('productName').textContent = p.name;
+        document.getElementById('productUnit').textContent = p.unit;
+        document.getElementById('productStock').textContent = p.stock;
+        document.getElementById('productPurchase').textContent = `$${p.purchase_price}`;
+        document.getElementById('productSale').textContent = `$${p.sale_price}`;
+        document.getElementById('editBtn').href = `edit_product.html?id=${p.id}`;
+        document.getElementById('productCard').classList.remove('hidden');
+
+      } catch (err) {
+        errorMsg.textContent = err.message;
+        errorMsg.classList.remove('hidden');
+      }
+    }
+
+    async function loadMovements() {
+      const tbody = document.getElementById('movementsTable');
+      try {
+        const res = await fetch(`${API_BASE}/products/${productId}/movements`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        if (!res.ok) throw new Error('Error al cargar movimientos');
+
+        const movements = await res.json();
+
+        if (movements.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-6 text-center text-gray-400">Sin movimientos</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = movements.map(m => {
+          const esIngreso = m.quantity > 0;
+          const fecha = new Date(m.created_at).toLocaleString('es-AR');
+          return `
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-gray-600">${fecha}</td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold ${esIngreso ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}">
+                  ${esIngreso ? 'Ingreso' : 'Retiro'}
+                </span>
+              </td>
+              <td class="px-6 py-4 font-medium ${esIngreso ? 'text-green-700' : 'text-red-600'}">
+                ${esIngreso ? '+' : ''}${m.quantity}
+              </td>
+            </tr>`;
+        }).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-6 text-center text-red-400">${err.message}</td></tr>`;
+      }
+    }
+
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if (!confirm('¿Eliminar este producto?')) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/products/${productId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          window.location.href = 'login.html';
+          return;
+        }
+
+        if (!res.ok) throw new Error('Error al eliminar el producto');
+
+        window.location.href = 'index.html';
+
+      } catch (err) {
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.textContent = err.message;
+        errorMsg.classList.remove('hidden');
+      }
+    });
+
+    loadProduct();
+    loadMovements();
+  </script>
+
+</body>
+</html>
