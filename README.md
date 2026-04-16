@@ -7,7 +7,7 @@ REST API de gestión de inventario construida con FastAPI y PostgreSQL.
 API deployada en Render:  
 https://inventory-api-jpwh.onrender.com/docs
 
-Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT. Incluye un frontend básico en HTML + Tailwind que consume todos los endpoints de la API.
+Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT. Incluye un frontend básico en HTML + Tailwind + JavaScript que consume todos los endpoints de la API.
 
 ![Swagger UI](docs/swagger.png)
 
