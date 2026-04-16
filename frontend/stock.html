@@ -66,20 +66,13 @@
     </div>
   </main>
 
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const API_BASE = 'http://localhost:8000';
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    });
-
     // Cargar productos en el select
     async function loadProducts() {
       try {
-        const res = await fetch(`${API_BASE}/products/`);
+        const res = await apiFetch('/products/');
         const products = await res.json();
 
         const select = document.getElementById('productSelect');
@@ -123,20 +116,11 @@
       const quantity = type === 'retiro' ? -cantidad : cantidad;
 
       try {
-        const res = await fetch(`${API_BASE}/products/${productId}/stock`, {
+        const res = await apiFetch(`/products/${productId}/stock`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ quantity }),
         });
-
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return;
-        }
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));

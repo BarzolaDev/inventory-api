@@ -77,24 +77,17 @@
 
   </main>
 
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const API_BASE = 'http://localhost:8000';
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
-
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
     if (!productId) window.location.href = 'index.html';
 
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    });
-
     async function loadProduct() {
       const errorMsg = document.getElementById('errorMsg');
       try {
-        const res = await fetch(`${API_BASE}/products/${productId}`);
+        const res = await apiFetch(`/products/${productId}`);
         if (!res.ok) throw new Error('Producto no encontrado');
         const p = await res.json();
 
@@ -115,15 +108,7 @@
     async function loadMovements() {
       const tbody = document.getElementById('movementsTable');
       try {
-        const res = await fetch(`${API_BASE}/products/${productId}/movements`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return;
-        }
+        const res = await apiFetch(`/products/${productId}/movements`);
 
         if (!res.ok) throw new Error('Error al cargar movimientos');
 
@@ -160,16 +145,7 @@
       if (!confirm('¿Eliminar este producto?')) return;
 
       try {
-        const res = await fetch(`${API_BASE}/products/${productId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return;
-        }
+        const res = await apiFetch(`/products/${productId}`, { method: 'DELETE' });
 
         if (!res.ok) throw new Error('Error al eliminar el producto');
 

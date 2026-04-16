@@ -62,16 +62,9 @@
     </div>
   </main>
 
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const API_BASE = 'http://localhost:8000';
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    });
-
     document.getElementById('productForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const errorMsg = document.getElementById('errorMsg');
@@ -89,20 +82,11 @@
       };
 
       try {
-        const res = await fetch(`${API_BASE}/products/`, {
+        const res = await apiFetch('/products/', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body),
         });
-
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return;
-        }
 
         if (!res.ok) {
           const data = await res.json().catch(() => ({}));

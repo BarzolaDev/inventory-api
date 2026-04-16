@@ -53,32 +53,15 @@
 
   </main>
 
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
   <script>
-    const API_BASE = 'http://localhost:8000';
-
-    // Si no hay token, mandamos al login
-    const token = localStorage.getItem('token');
-    if (!token) window.location.href = 'login.html';
-
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      localStorage.removeItem('token');
-      window.location.href = 'login.html';
-    });
-
     async function loadProducts() {
       const errorMsg = document.getElementById('errorMsg');
       const tbody = document.getElementById('productTable');
 
       try {
-        const res = await fetch(`${API_BASE}/products/`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          window.location.href = 'login.html';
-          return;
-        }
+        const res = await apiFetch('/products/');
 
         if (!res.ok) throw new Error('Error al cargar los productos');
 
