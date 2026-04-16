@@ -23,6 +23,8 @@ Permite registrar productos, controlar stock con movimientos auditados y gestion
 | **Pydantic** | Validación de datos |
 | **Argon2** | Hashing de contraseñas |
 | **JWT** | Autenticación |
+| **Alembic** | Migraciones de base de datos |
+| **Docker** | Contenedorización |
 
 ---
 
@@ -132,5 +134,16 @@ alembic revision --autogenerate -m "descripcion del cambio"
 - **`SELECT FOR UPDATE`** en mutaciones de stock para prevenir race conditions bajo escrituras concurrentes
 - **Stock no puede ser negativo** — el servicio valida que el resultado de cada movimiento sea `>= 0` antes de persistir
 - **`sale_price` debe ser mayor que `purchase_price`** — validado en el schema al crear y en el servicio al actualizar
-- **Excepciones de dominio tipadas** (`ProductNotFoundError`, `InsufficientStockError`) en la capa de servicios — las rutas las mapean a códigos HTTP
+- **Excepciones de dominio tipadas** (`ProductNotFoundError`, `InsufficientStockError`) en la capa de servicios — el servicio no sabe nada de HTTP, solo señala qué falló en la lógica de negocio; la ruta atrapa la excepción y decide el código HTTP correspondiente sin mezclar responsabilidades
 - **Argon2** para hashing de contraseñas en lugar de bcrypt, por ser el ganador de Password Hashing Competition
+- **`GET /products/` y `GET /products/{id}` son públicos** — se decidió que la consulta de productos no requiere autenticación para permitir que cualquier visitante vea el catálogo sin registrarse; las operaciones de escritura (crear, editar, eliminar, mover stock) sí requieren token
+- **Pytest incorporado para cubrir happy paths, edge cases y el flujo completo routes → services → db** — al ser la primera API REST se priorizó tener cobertura de los casos críticos; en el próximo proyecto se arranca directamente con TDD
+- **Separación en capas routes/services** — el código arrancó con toda la lógica en las rutas; al necesitar inyectar `get_current_user` como dependencia en las rutas protegidas se hizo evidente la necesidad de separar la lógica de negocio en servicios independientes para mantener las rutas limpias y testeables
+- **Alembic para migraciones** — inicialmente los cambios de esquema se aplicaban a mano via DBeaver; se incorporó Alembic para versionar y reproducir los cambios de la DB de forma controlada y sin intervención manual
+- **Docker para estandarizar el entorno** — elimina el "en mi máquina funciona"; cualquiera puede levantar la app con `docker compose up --build` sin instalar PostgreSQL ni configurar variables manualmente
+- **Inyección de dependencias con `Depends()`** — `get_db` y `get_current_user` se inyectan en las rutas en vez de instanciarse adentro de cada una; las rutas no saben cómo se crea la sesión ni cómo se verifica el token, lo que se alinea con el principio DIP de SOLID
+- **Herencia de schemas `Base → Create → Response`** — se aplicó el patrón estándar de Pydantic para evitar duplicación de campos y facilitar la extensión si el proyecto escala; cada schema agrega solo lo que le corresponde
+- **`utils/db_utils.py` con `commit_and_refresh`** — el patrón `add → commit → refresh` con rollback en caso de error se repetía en múltiples servicios; se extrajo a un helper aplicando DRY para evitar inconsistencias de sesión por copy-paste
+- **JWT sin refresh token ni revocación server-side** — el token expira según `ACCESS_TOKEN_EXPIRE_MINUTES`; el logout es client-side (se elimina de `localStorage`). No hay blacklist ni mecanismo de invalidación anticipada. En producción se implementaría refresh token y revocación via Redis o tabla de tokens invalidados
+- **SQLite en tests en lugar de PostgreSQL** — los tests corren contra una base de datos SQLite en memoria por velocidad y simplicidad de setup; la limitación es que SQLite no soporta `SELECT FOR UPDATE`, por lo que esa lógica de concurrencia no se testea a nivel unitario sino que se confía en la integración con PostgreSQL en producción
+- **JWT guardado en `localStorage`** en el frontend por simplicidad durante desarrollo — en producción se usaría una `httpOnly cookie` para prevenir XSS
