@@ -62,7 +62,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 -----
 
-## ▶Getting Started
+## Getting Started
 
 ### Using Docker
 
