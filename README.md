@@ -1,53 +1,57 @@
-# 📦 Inventory API
+# 📦 Inventory Management API
 
-REST API de gestión de inventario construida con FastAPI y PostgreSQL.
+A robust REST API for inventory management built with **FastAPI** and **PostgreSQL**.
 
-## 🚀 Demo
+## 🚀 Live Demo
 
-API deployada en Render:  
-https://inventory-api-jpwh.onrender.com/docs
+API deployed on Render:  
+[https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
 
-Permite registrar productos, controlar stock con movimientos auditados y gestionar usuarios con autenticación JWT. Incluye un frontend básico en HTML + Tailwind + JavaScript que consume todos los endpoints de la API.
+**Key Features:**
 
-![Swagger UI](docs/swagger.png)
+  * Product registration and signed stock movements with full audit trails.
+  * User management with **JWT Authentication**.
+  * **Clean Architecture:** Decoupled logic across specialized layers.
+  * **Frontend:** A lightweight dashboard built with HTML, Tailwind CSS, and Vanilla JavaScript consuming the API.
 
----
+-----
 
-## 🧰 Stack
+## 🧰 Tech Stack
 
-| Tecnología | Uso |
+| Technology | Purpose |
 |------------|-----|
-| **FastAPI** | Framework web |
-| **SQLAlchemy** | ORM |
-| **PostgreSQL** | Base de datos |
-| **Pydantic** | Validación de datos |
-| **Argon2** | Hashing de contraseñas |
-| **JWT** | Autenticación |
-| **Alembic** | Migraciones de base de datos |
-| **Docker** | Contenedorización |
+| **FastAPI** | High-performance Web Framework |
+| **SQLAlchemy** | SQL Toolkit & ORM |
+| **PostgreSQL** | Relational Database |
+| **Pydantic** | Data Validation & Settings Management |
+| **Argon2** | Secure Password Hashing |
+| **JWT** | Stateless Authentication |
+| **Alembic** | Database Migrations |
+| **Docker** | Containerization |
 
----
+-----
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
-Separación en capas:
+The project follows a **Layered Architecture** pattern to ensure separation of concerns:
 
+```text
+api/
+├── routes/    → Handles HTTP requests, delegates to services, manages HTTP errors.
+├── services/  → Core Business Logic; raises Domain Exceptions.
+├── models/    → SQLAlchemy ORM Models.
+├── schemas/   → Data validation (Input/Output) via Pydantic.
+├── core/      → Security (JWT, Hashing) and global dependencies (get_current_user).
+├── db/        → Database engine, session management, and get_db dependency.
+├── utils/     → Reusable helpers (e.g., commit_and_refresh).
+└── tests/     → Service-level and Integration (HTTP) tests.
 ```
-routes/     → recibe HTTP, delega a services, maneja errores HTTP
-services/   → lógica de negocio, lanza excepciones de dominio
-models/     → modelos ORM
-schemas/    → validación de entrada/salida con Pydantic
-core/       → seguridad (JWT, hashing) y dependencias (get_current_user)
-db/         → engine, SessionLocal y dependencia get_db
-utils/      → helpers reutilizables (commit_and_refresh)
-tests/      → tests de servicios y tests HTTP con TestClient
-```
 
----
+-----
 
-## ⚙️ Variables de entorno
+## ⚙️ Environment Variables
 
-Creá un archivo `.env` en la raíz del proyecto:
+Create a `.env` file in the root directory:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/dbname
@@ -56,21 +60,21 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
----
+-----
 
-## ▶️ Cómo correr el proyecto
+## ▶️ Getting Started
 
-### 🐳 Con Docker
+### 🐳 Using Docker
 
 ```bash
 docker compose up --build
 ```
 
-### 💻 Local
+### 💻 Local Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate  # Unix
+source .venv/bin/activate  # Unix/MacOS
 .venv\Scripts\activate     # Windows
 
 pip install -r requirements.txt
@@ -78,76 +82,62 @@ alembic upgrade head
 uvicorn api.main:app --reload
 ```
 
-Documentación interactiva disponible en `http://localhost:8000/docs`
+*Interactive docs available at `http://localhost:8000/docs`*
 
----
+-----
 
-## 🔌 Endpoints
+## 🔌 API Endpoints
 
-### Usuarios
+### Auth & Users
 
-| Método | Ruta | Descripción |
+| Method | Endpoint | Description |
 |--------|------|-------------|
-| POST | `/users/register` | Registro de usuario |
-| POST | `/users/login` | Login — devuelve Bearer token |
+| POST | `/users/register` | User registration |
+| POST | `/users/login` | Login - returns Bearer Token |
 
-### Productos
+### Inventory
 
-| Método | Ruta | Auth | Descripción |
+| Method | Endpoint | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/products/` | No | Listar productos (soporta paginación con `skip` y `limit`) |
-| GET | `/products/{id}` | No | Obtener producto |
-| POST | `/products/` | Sí | Crear producto |
-| PATCH | `/products/{id}` | Sí | Actualizar producto |
-| DELETE | `/products/{id}` | Sí | Eliminar producto |
-| POST | `/products/{id}/stock` | Sí | Actualizar stock |
-| GET | `/products/{id}/movements` | Sí | Historial de movimientos |
+| GET | `/products/` | No | List products (Supports pagination: `skip`, `limit`) |
+| GET | `/products/{id}` | No | Retrieve product details |
+| POST | `/products/` | Yes | Create new product |
+| PATCH | `/products/{id}` | Yes | Update product |
+| DELETE | `/products/{id}` | Yes | Delete product |
+| POST | `/products/{id}/stock` | Yes | Update stock level |
+| GET | `/products/{id}/movements` | Yes | Stock movement history |
 
-> Los movimientos de stock usan cantidad con signo: **positivo = ingreso**, **negativo = retiro**.
+> **Note:** Stock movements use signed integers (**positive = restock**, **negative = sale/withdrawal**).
 
----
+-----
 
-## 🧪 Tests
+## 🧪 Testing
 
 ```bash
 pytest api/tests/
 ```
 
-Dos niveles de cobertura:
-- **Tests de servicio** — llaman directo a la lógica de negocio, cubren happy paths y edge cases
-- **Tests HTTP** — usan `TestClient` para verificar status codes, response schemas y autenticación en los endpoints
+**Coverage levels:**
 
-Corren contra una base de datos SQLite en memoria, aislada por función.
+1.  **Service Tests:** Direct business logic validation, covering happy paths and edge cases.
+2.  **Integration Tests:** Using `TestClient` to verify HTTP status codes, schemas, and Auth middleware.
 
----
+*Tests run against an isolated **SQLite in-memory database** per function.*
 
-## 🗄️ Migraciones
+-----
 
-```bash
-# Aplicar migraciones pendientes
-alembic upgrade head
+## 🔍 Engineering Decisions & Trade-offs
 
-# Generar migración después de cambiar un modelo
-alembic revision --autogenerate -m "descripcion del cambio"
-```
+  * **Concurrency Control:** Implemented **`SELECT FOR UPDATE`** on stock mutations to prevent race conditions during concurrent writes.
+  * **Domain-Driven Validation:** Stock levels are strictly validated in the Service Layer to ensure they never drop below zero before persistence.
+  * **Layered Exception Handling:** Custom typed exceptions (`ProductNotFoundError`, `InsufficientStockError`) are raised in the Service Layer. Routes catch these and map them to appropriate HTTP status codes, keeping the business logic agnostic of the web layer.
+  * **Advanced Hashing:** Chose **Argon2** over BCrypt. As the winner of the Password Hashing Competition, it provides superior resistance to GPU/ASIC attacks through memory-hard functions.
+  * **SOLID Principles & DI:** Utilized FastAPI's `Depends()` for **Dependency Injection** (`get_db`, `get_current_user`). This decouples routes from resource instantiation, aligning with the Dependency Inversion Principle.
+  * **Database Migrations:** Integrated **Alembic** to provide versioned, reproducible schema changes, moving away from manual database updates.
+  * **DRY Database Helpers:** Extracted the `add → commit → refresh` pattern with automated rollbacks into a `db_utils` helper to ensure session consistency across services.
+  * **Infrastructure as Code:** Used **Docker** to standardize the development environment, eliminating "it works on my machine" issues.
+  * **Testing Strategy:** Prioritized high-impact logic coverage. While currently using SQLite for speed, I acknowledge its lack of support for `SELECT FOR UPDATE`, meaning concurrency logic is validated via PostgreSQL integration in production.
+  * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
 
----
+-----
 
-## 🔍 Decisiones técnicas
-
-- **`SELECT FOR UPDATE`** en mutaciones de stock para prevenir race conditions bajo escrituras concurrentes
-- **Stock no puede ser negativo** — el servicio valida que el resultado de cada movimiento sea `>= 0` antes de persistir
-- **`sale_price` debe ser mayor que `purchase_price`** — validado en el schema al crear y en el servicio al actualizar
-- **Excepciones de dominio tipadas** (`ProductNotFoundError`, `InsufficientStockError`) en la capa de servicios — el servicio no sabe nada de HTTP, solo señala qué falló en la lógica de negocio; la ruta atrapa la excepción y decide el código HTTP correspondiente sin mezclar responsabilidades
-- **Argon2** para hashing de contraseñas en lugar de bcrypt — ganador de la Password Hashing Competition, diseñado para resistir ataques de GPU y hardware especializado (ASICs) mediante uso intensivo de memoria, lo que hace el paralelismo masivo prohibitivamente caro
-- **`GET /products/` y `GET /products/{id}` son públicos** — se decidió que la consulta de productos no requiere autenticación para permitir que cualquier visitante vea el catálogo sin registrarse; las operaciones de escritura (crear, editar, eliminar, mover stock) sí requieren token
-- **Pytest incorporado para cubrir happy paths, edge cases y el flujo completo routes → services → db** — al ser la primera API REST se priorizó tener cobertura de los casos críticos; en el próximo proyecto se arranca directamente con TDD
-- **Separación en capas routes/services** — el código arrancó con toda la lógica en las rutas; al necesitar inyectar `get_current_user` como dependencia en las rutas protegidas se hizo evidente la necesidad de separar la lógica de negocio en servicios independientes para mantener las rutas limpias y testeables
-- **Alembic para migraciones** — inicialmente los cambios de esquema se aplicaban a mano via DBeaver; se incorporó Alembic para versionar y reproducir los cambios de la DB de forma controlada y sin intervención manual
-- **Docker para estandarizar el entorno** — elimina el "en mi máquina funciona"; cualquiera puede levantar la app con `docker compose up --build` sin instalar PostgreSQL ni configurar variables manualmente
-- **Inyección de dependencias con `Depends()`** — `get_db` y `get_current_user` se inyectan en las rutas en vez de instanciarse adentro de cada una; las rutas no saben cómo se crea la sesión ni cómo se verifica el token, lo que se alinea con el principio DIP de SOLID
-- **Herencia de schemas `Base → Create → Response`** — se aplicó el patrón estándar de Pydantic para evitar duplicación de campos y facilitar la extensión si el proyecto escala; cada schema agrega solo lo que le corresponde
-- **`utils/db_utils.py` con `commit_and_refresh`** — el patrón `add → commit → refresh` con rollback en caso de error se repetía en múltiples servicios; se extrajo a un helper aplicando DRY para evitar inconsistencias de sesión por copy-paste
-- **JWT sin refresh token ni revocación server-side** — el token expira según `ACCESS_TOKEN_EXPIRE_MINUTES`; el logout es client-side (se elimina de `localStorage`). No hay blacklist ni mecanismo de invalidación anticipada. En producción se implementaría refresh token y revocación via Redis o tabla de tokens invalidados
-- **SQLite en tests en lugar de PostgreSQL** — los tests corren contra una base de datos SQLite en memoria por velocidad y simplicidad de setup; la limitación es que SQLite no soporta `SELECT FOR UPDATE`, por lo que esa lógica de concurrencia no se testea a nivel unitario sino que se confía en la integración con PostgreSQL en producción
-- **JWT guardado en `localStorage`** en el frontend por simplicidad durante desarrollo — en producción se usaría una `httpOnly cookie` para prevenir XSS
