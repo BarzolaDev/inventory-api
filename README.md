@@ -1,8 +1,8 @@
-# 📦 Inventory Management API
+# Inventory Management API
 
 A robust REST API for inventory management built with **FastAPI** and **PostgreSQL**.
 
-## 🚀 Live Demo
+## Live Demo
 
 API deployed on Render:  
 [https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
@@ -16,7 +16,7 @@ API deployed on Render:
 
 -----
 
-## 🧰 Tech Stack
+## Tech Stack
 
 | Technology | Purpose |
 |------------|-----|
@@ -31,7 +31,7 @@ API deployed on Render:
 
 -----
 
-## 🏗️ Architecture
+## Architecture
 
 The project follows a **Layered Architecture** pattern to ensure separation of concerns:
 
@@ -49,7 +49,7 @@ api/
 
 -----
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 Create a `.env` file in the root directory:
 
@@ -62,15 +62,15 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 
 -----
 
-## ▶️ Getting Started
+## ▶Getting Started
 
-### 🐳 Using Docker
+### Using Docker
 
 ```bash
 docker compose up --build
 ```
 
-### 💻 Local Setup
+### Local Setup
 
 ```bash
 python -m venv .venv
@@ -86,7 +86,7 @@ uvicorn api.main:app --reload
 
 -----
 
-## 🔌 API Endpoints
+## API Endpoints
 
 ### Auth & Users
 
@@ -111,7 +111,7 @@ uvicorn api.main:app --reload
 
 -----
 
-## 🧪 Testing
+## Testing
 
 ```bash
 pytest api/tests/
@@ -126,7 +126,7 @@ pytest api/tests/
 
 -----
 
-## 🔍 Engineering Decisions & Trade-offs
+## Engineering Decisions & Trade-offs
 
   * **Concurrency Control:** Implemented **`SELECT FOR UPDATE`** on stock mutations to prevent race conditions during concurrent writes.
   * **Domain-Driven Validation:** Stock levels are strictly validated in the Service Layer to ensure they never drop below zero before persistence.
