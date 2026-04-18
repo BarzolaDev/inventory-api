@@ -138,7 +138,6 @@ pytest api/tests/
   * **Infrastructure as Code:** Used **Docker** to standardize the development environment, eliminating "it works on my machine" issues.
   * **Testing Strategy:** Prioritized high-impact logic coverage. While currently using SQLite for speed, I acknowledge its lack of support for `SELECT FOR UPDATE`, meaning concurrency logic is validated via PostgreSQL integration in production.
   * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
-  * **Observability:** The system currently lacks structured logging and metrics. Future improvements include integrating logging, monitoring and alerting to ensure system reliability and easier debugging in production environments.
   
 -----
 
