@@ -139,8 +139,6 @@ pytest api/tests/
   * **Testing Strategy:** Prioritized high-impact logic coverage. While currently using SQLite for speed, I acknowledge its lack of support for `SELECT FOR UPDATE`, meaning concurrency logic is validated via PostgreSQL integration in production.
   * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
   * **Observability:** The system currently lacks structured logging and metrics. Future improvements include integrating logging, monitoring and alerting to ensure system reliability and easier debugging in production environments.
-  * **Scalability Considerations:** The current design supports safe concurrent operations at the database level. Future iterations could introduce caching layers (e.g., Redis) and horizontal scaling strategies to handle higher load.
-  * **Authorization:** The current implementation supports authentication via JWT. Future improvements could include role-based access control (RBAC) for more granular permissions.
-  * **Idempotency Considerations:** Critical operations such as stock updates could benefit from idempotent design to prevent duplicate effects in case of retries or network failures.
+  
 -----
 
