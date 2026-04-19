@@ -4,12 +4,12 @@ from typing import Generator
 from sqlalchemy.orm import Session
 from api.core.settings import settings
 
+is_sqlite = str(settings.DATABASE_URL).startswith("sqlite")
 
 engine = create_engine(
     str(settings.DATABASE_URL),
     pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
+    **({} if is_sqlite else {"pool_size": 10, "max_overflow": 20})
 )
 
 SessionLocal = sessionmaker(
