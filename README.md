@@ -1,143 +1,78 @@
-# Inventory Management API
+# ⚙️ Inventory Management System
 
-A robust REST API for inventory management built with **FastAPI** and **PostgreSQL**.
+Backend system built with FastAPI, designed to ensure **data consistency and reliable behavior under concurrent operations**.
 
-## Live Demo
+Focused on enforcing **business rules at the service layer**, preventing **race conditions**, and maintaining **transactional integrity** in real-world inventory scenarios.
 
-API deployed on Render:  
-[https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
+👉 Live Demo: https://inventory-api-jpwh.onrender.com/docs
 
-**Key Features:**
+---
 
-  * Product registration and signed stock movements with full audit trails.
-  * User management with **JWT Authentication**.
-  * **Clean Architecture:** Decoupled logic across specialized layers.
-  * **Frontend:** A lightweight dashboard built with HTML, Tailwind CSS, and Vanilla JavaScript consuming the API.
+## 🧠 Overview
 
------
+This project simulates a production-style backend where stock operations must remain consistent even under concurrent access.
 
-## Tech Stack
+Key design goals:
 
-| Technology | Purpose |
-|------------|-----|
-| **FastAPI** | High-performance Web Framework |
-| **SQLAlchemy** | SQL Toolkit & ORM |
-| **PostgreSQL** | Relational Database |
-| **Pydantic** | Data Validation & Settings Management |
-| **Argon2** | Secure Password Hashing |
-| **JWT** | Stateless Authentication |
-| **Alembic** | Database Migrations |
-| **Docker** | Containerization |
+- Ensure **data consistency** during stock mutations  
+- Prevent **race conditions** using database-level locking (`SELECT FOR UPDATE`)  
+- Enforce **domain-level validation** to guarantee that stock never becomes invalid  
+- Maintain clear **separation of concerns** through a layered architecture  
+- Provide **predictable and testable behavior** via automated testing  
 
------
+---
 
-## Architecture
+## ⚙️ Core Principles
 
-The project follows a **Layered Architecture** pattern to ensure separation of concerns:
+- **Transactional Integrity:** All stock updates are executed within controlled transactions  
+- **Business Rules Enforcement:** Validation is handled in the service layer, not in routes  
+- **Layered Architecture:** Decouples HTTP handling from core business logic  
+- **Dependency Injection:** Resources are managed via FastAPI dependencies  
+- **Regression Prevention:** Critical logic is protected through test coverage  
 
-```text
-api/
-├── routes/    → Handles HTTP requests, delegates to services, manages HTTP errors.
-├── services/  → Core Business Logic; raises Domain Exceptions.
-├── models/    → SQLAlchemy ORM Models.
-├── schemas/   → Data validation (Input/Output) via Pydantic.
-├── core/      → Security (JWT, Hashing) and global dependencies (get_current_user).
-├── db/        → Database engine, session management, and get_db dependency.
-├── utils/     → Reusable helpers (e.g., commit_and_refresh).
-└── tests/     → Service-level and Integration (HTTP) tests.
-```
+---
 
------
+## 🧱 Architecture
 
-## Environment Variables
+Structured using a **layered architecture** to isolate responsibilities:
 
-Create a `.env` file in the root directory:
+- **Routes:** Handle HTTP requests and responses  
+- **Services:** Contain core business logic and domain validation  
+- **Models:** Represent database entities (SQLAlchemy)  
+- **Schemas:** Validate input/output data (Pydantic)  
+- **Core:** Security, authentication, and shared dependencies  
+- **DB:** Session management and database configuration  
 
-```env
-DATABASE_URL=postgresql://user:password@host:port/dbname
-SECRET_KEY=your-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
+---
 
------
+## 🧪 Reliability
 
-## Getting Started
+The system is built with a strong focus on **testable business logic** and **regression prevention**:
 
-### Using Docker
+- Service-level tests for domain rules  
+- Integration tests validating HTTP behavior  
+- Isolated test environment for consistent execution  
 
-```bash
-docker compose up --build
-```
+---
 
-### Local Setup
+## 🔐 Security
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Unix/MacOS
-.venv\Scripts\activate     # Windows
+- **JWT-based authentication** for stateless access control  
+- **Argon2 password hashing** for secure credential storage  
 
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn api.main:app --reload
-```
+---
 
-*Interactive docs available at `http://localhost:8000/docs`*
+## ⚡ Configuration
 
------
+Centralized configuration using **Pydantic Settings**, with environment loading extracted into a dedicated module (`load_toenv()`), improving:
 
-## API Endpoints
+- Maintainability  
+- Environment consistency  
+- Testability  
 
-### Auth & Users
+---
 
-| Method | Endpoint | Description |
-|--------|------|-------------|
-| POST | `/users/register` | User registration |
-| POST | `/users/login` | Login - returns Bearer Token |
+## 🚀 Environment
 
-### Inventory
-
-| Method | Endpoint | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/products/` | No | List products (Supports pagination: `skip`, `limit`) |
-| GET | `/products/{id}` | No | Retrieve product details |
-| POST | `/products/` | Yes | Create new product |
-| PATCH | `/products/{id}` | Yes | Update product |
-| DELETE | `/products/{id}` | Yes | Delete product |
-| POST | `/products/{id}/stock` | Yes | Update stock level |
-| GET | `/products/{id}/movements` | Yes | Stock movement history |
-
-> **Note:** Stock movements use signed integers (**positive = restock**, **negative = sale/withdrawal**).
-
------
-
-## Testing
-
-```bash
-pytest api/tests/
-```
-
-**Coverage levels:**
-
-1.  **Service Tests:** Direct business logic validation, covering happy paths and edge cases.
-2.  **Integration Tests:** Using `TestClient` to verify HTTP status codes, schemas, and Auth middleware.
-
-*Tests run against an isolated **SQLite in-memory database** per function.*
-
------
-
-## Engineering Decisions & Trade-offs
-
-  * **Concurrency Control:** Implemented **`SELECT FOR UPDATE`** on stock mutations to prevent race conditions during concurrent writes.
-  * **Domain-Driven Validation:** Stock levels are strictly validated in the Service Layer to ensure they never drop below zero before persistence.
-  * **Layered Exception Handling:** Custom typed exceptions (`ProductNotFoundError`, `InsufficientStockError`) are raised in the Service Layer. Routes catch these and map them to appropriate HTTP status codes, keeping the business logic agnostic of the web layer.
-  * **Advanced Hashing:** Chose **Argon2** over BCrypt. As the winner of the Password Hashing Competition, it provides superior resistance to GPU/ASIC attacks through memory-hard functions.
-  * **SOLID Principles & DI:** Utilized FastAPI's `Depends()` for **Dependency Injection** (`get_db`, `get_current_user`). This decouples routes from resource instantiation, aligning with the Dependency Inversion Principle.
-  * **Database Migrations:** Integrated **Alembic** to provide versioned, reproducible schema changes, moving away from manual database updates.
-  * **DRY Database Helpers:** Extracted the `add → commit → refresh` pattern with automated rollbacks into a `db_utils` helper to ensure session consistency across services.
-  * **Infrastructure as Code:** Used **Docker** to standardize the development environment, eliminating "it works on my machine" issues.
-  * **Testing Strategy:** Prioritized high-impact logic coverage. While currently using SQLite for speed, I acknowledge its lack of support for `SELECT FOR UPDATE`, meaning concurrency logic is validated via PostgreSQL integration in production.
-  * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
-  
------
-
+- Containerized setup using Docker for reproducible environments  
+- Database migrations handled via Alembic  
