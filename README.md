@@ -1,57 +1,77 @@
 # Inventory Management API
 
-A robust REST API for inventory management built with **FastAPI** and **PostgreSQL**.
+Production-ready REST API for inventory management built with FastAPI.  
+Designed to ensure data consistency under concurrent operations, with automated testing and CI/CD integration.
 
-## Live Demo
+---
 
-API deployed on Render:  
+## 🌍 Live Demo
+
+Interactive API documentation:  
 [https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
 
-**Key Features:**
+---
 
-  * Product registration and signed stock movements with full audit trails.
-  * User management with **JWT Authentication**.
-  * **Clean Architecture:** Decoupled logic across specialized layers.
-  * **Frontend:** A lightweight dashboard built with HTML, Tailwind CSS, and Vanilla JavaScript consuming the API.
+## 🧠 Overview
 
------
+This project focuses on building a reliable backend system with:
 
-## Tech Stack
+- Data consistency under concurrent operations
+- Clear separation of concerns via layered architecture
+- Automated testing and CI to ensure reliability
+
+The goal is to simulate real-world backend constraints beyond basic CRUD APIs.
+
+---
+
+## ✨ Key Features
+
+- Product registration and signed stock movements with full audit trails
+- User management with JWT Authentication
+- Concurrency-safe stock operations (`SELECT FOR UPDATE`)
+- Clean Architecture with clear separation of responsibilities
+- Fully dockerized environment
+- Automated testing (unit + integration)
+- CI pipeline with GitHub Actions
+
+---
+
+## 🧰 Tech Stack
 
 | Technology | Purpose |
-|------------|-----|
-| **FastAPI** | High-performance Web Framework |
-| **SQLAlchemy** | SQL Toolkit & ORM |
-| **PostgreSQL** | Relational Database |
-| **Pydantic** | Data Validation & Settings Management |
-| **Argon2** | Secure Password Hashing |
-| **JWT** | Stateless Authentication |
-| **Alembic** | Database Migrations |
-| **Docker** | Containerization |
+|------------|---------|
+| FastAPI | High-performance Web Framework |
+| SQLAlchemy | ORM & DB Toolkit |
+| PostgreSQL | Relational Database |
+| Pydantic | Validation & Settings |
+| Argon2 | Password Hashing |
+| JWT | Authentication |
+| Alembic | Migrations |
+| Docker | Containerization |
 
------
+---
 
-## Architecture
-
-The project follows a **Layered Architecture** pattern to ensure separation of concerns:
+## 🏗 Architecture
 
 ```text
 api/
-├── routes/    → Handles HTTP requests, delegates to services, manages HTTP errors.
-├── services/  → Core Business Logic; raises Domain Exceptions.
-├── models/    → SQLAlchemy ORM Models.
-├── schemas/   → Data validation (Input/Output) via Pydantic.
-├── core/      → Security (JWT, Hashing) and global dependencies (get_current_user).
-├── db/        → Database engine, session management, and get_db dependency.
-├── utils/     → Reusable helpers (e.g., commit_and_refresh).
-└── tests/     → Service-level and Integration (HTTP) tests.
+├── routes/    → Handles HTTP requests, delegates to services, maps HTTP errors
+├── services/  → Core business logic; raises domain exceptions
+├── models/    → SQLAlchemy ORM models
+├── schemas/   → Input/output validation via Pydantic
+├── core/      → Security (JWT, hashing) and global dependencies
+├── db/        → Engine, session management, and get_db dependency
+├── utils/     → Reusable helpers (e.g., commit_and_refresh)
+└── tests/     → Service-level and integration (HTTP) tests
 ```
 
------
+Layered architecture ensures separation between HTTP, business logic, and persistence layers.
 
-## Environment Variables
+---
 
-Create a `.env` file in the root directory:
+## ⚙️ Environment Variables
+
+Create a `.env` file:
 
 ```env
 DATABASE_URL=postgresql://user:password@host:port/dbname
@@ -60,86 +80,80 @@ ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
------
+---
 
-## Getting Started
-
-### Using Docker
+## 🚀 Getting Started
 
 ```bash
 docker compose up --build
 ```
 
-### Local Setup
+Application will be available at: `http://localhost:8000/docs`
 
-```bash
-python -m venv .venv
-source .venv/bin/activate  # Unix/MacOS
-.venv\Scripts\activate     # Windows
+---
 
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn api.main:app --reload
-```
-
-*Interactive docs available at `http://localhost:8000/docs`*
-
------
-
-## API Endpoints
+## 📡 API Endpoints
 
 ### Auth & Users
 
 | Method | Endpoint | Description |
-|--------|------|-------------|
+|--------|----------|-------------|
 | POST | `/users/register` | User registration |
-| POST | `/users/login` | Login - returns Bearer Token |
+| POST | `/users/login` | Login — returns Bearer Token |
 
 ### Inventory
 
 | Method | Endpoint | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/products/` | No | List products (Supports pagination: `skip`, `limit`) |
-| GET | `/products/{id}` | No | Retrieve product details |
-| POST | `/products/` | Yes | Create new product |
+|--------|----------|------|-------------|
+| GET | `/products/` | No | List products (pagination: `skip`, `limit`) |
+| GET | `/products/{id}` | No | Get product |
+| POST | `/products/` | Yes | Create product |
 | PATCH | `/products/{id}` | Yes | Update product |
 | DELETE | `/products/{id}` | Yes | Delete product |
 | POST | `/products/{id}/stock` | Yes | Update stock level |
 | GET | `/products/{id}/movements` | Yes | Stock movement history |
 
-> **Note:** Stock movements use signed integers (**positive = restock**, **negative = sale/withdrawal**).
+> Stock movements use signed integers — **positive = restock**, **negative = sale/withdrawal**.
 
------
+---
 
-## Testing
+## 🧪 Testing
 
 ```bash
 pytest api/tests/
 ```
 
-**Coverage levels:**
+- **Service tests:** Direct business logic validation, covering happy paths and edge cases
+- **Integration tests:** Using `TestClient` to verify HTTP status codes, schemas, and auth middleware
 
-1.  **Service Tests:** Direct business logic validation, covering happy paths and edge cases.
-2.  **Integration Tests:** Using `TestClient` to verify HTTP status codes, schemas, and Auth middleware.
+Tests run automatically on every push via GitHub Actions.
 
-*Tests run against an isolated **SQLite in-memory database** per function.*
+---
 
------
+## 🧠 Engineering Decisions & Trade-offs
 
-## Engineering Decisions & Trade-offs
+- **Concurrency control with `SELECT FOR UPDATE`:** Stock mutation queries lock the row before reading, preventing race conditions during concurrent writes. This ensures stock levels stay consistent under simultaneous requests.
 
-  * **Concurrency Control:** Implemented **`SELECT FOR UPDATE`** on stock mutations to prevent race conditions during concurrent writes.
-  * **Domain-Driven Validation:** Stock levels are strictly validated in the Service Layer to ensure they never drop below zero before persistence.
-  * **Layered Exception Handling:** Custom typed exceptions (`ProductNotFoundError`, `InsufficientStockError`) are raised in the Service Layer. Routes catch these and map them to appropriate HTTP status codes, keeping the business logic agnostic of the web layer.
-  * **Advanced Hashing:** Chose **Argon2** over BCrypt. As the winner of the Password Hashing Competition, it provides superior resistance to GPU/ASIC attacks through memory-hard functions.
-  * **SOLID Principles & DI:** Utilized FastAPI's `Depends()` for **Dependency Injection** (`get_db`, `get_current_user`). This decouples routes from resource instantiation, aligning with the Dependency Inversion Principle.
-  * **Database Migrations:** Integrated **Alembic** to provide versioned, reproducible schema changes, moving away from manual database updates.
-  * **DRY Database Helpers:** Extracted the `add → commit → refresh` pattern with automated rollbacks into a `db_utils` helper to ensure session consistency across services.
-  * **Infrastructure as Code:** Used **Docker** to standardize the development environment, eliminating "it works on my machine" issues.
-  * **Testing Strategy:** Prioritized high-impact logic coverage. While currently using SQLite for speed, I acknowledge its lack of support for `SELECT FOR UPDATE`, meaning concurrency logic is validated via PostgreSQL integration in production.
-  * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
-  * **Configuration Management:** Replaced `load_dotenv` with **Pydantic Settings** (`BaseSettings`) for type-safe, validated environment variables. `database.py` consumes `settings.DATABASE_URL` directly, eliminating manual env parsing and centralizing configuration in a single source of truth.
-  * **CI Pipeline:** Configured **GitHub Actions** to automatically run the test suite on every push, ensuring regressions are caught early without manual intervention.
-  * **Type Flexibility on DATABASE_URL:** Typed as `str` instead of Pydantic's `PostgresDsn` to support SQLite in CI/testing environments. Connection string validation is delegated to the database driver at runtime.
------
+- **Domain validation in the service layer:** Stock levels are validated before persistence, ensuring they never drop below zero. The service layer raises typed exceptions (`InsufficientStockError`, `ProductNotFoundError`) that routes catch and map to appropriate HTTP status codes — keeping business logic agnostic of the web layer.
 
+- **Argon2 over BCrypt for password hashing:** As the winner of the Password Hashing Competition, Argon2 provides superior resistance to GPU/ASIC attacks through memory-hard functions. BCrypt would have worked, but Argon2 is the current best practice.
+
+- **Dependency Injection via FastAPI `Depends()`:** Used for `get_db` and `get_current_user`, decoupling routes from resource instantiation. This aligns with the Dependency Inversion Principle and makes unit testing significantly easier.
+
+- **Alembic for database migrations:** Provides versioned, reproducible schema changes instead of manual `CREATE TABLE` scripts. This is essential for any project that evolves over time or runs across multiple environments.
+
+- **Pydantic `BaseSettings` over `load_dotenv`:** Environment variables are type-safe and validated at startup. `database.py` consumes `settings.DATABASE_URL` directly, centralizing configuration and eliminating manual `os.getenv()` calls scattered across the codebase.
+
+- **SQLite in tests, PostgreSQL in production:** SQLite keeps the test suite fast and dependency-free (no DB server needed in CI). The trade-off is that `SELECT FOR UPDATE` isn't supported in SQLite, so concurrency logic is validated against PostgreSQL in production rather than in automated tests.
+
+- **Docker for environment standardization:** Eliminates environment-specific bugs and makes the project runnable with a single command regardless of the host OS.
+
+- **Auto-increment IDs over UUIDs:** Chosen for simplicity and query performance. UUIDs would be preferable in distributed systems or scenarios requiring non-guessable public identifiers.
+
+---
+
+## ⚠️ Known Limitations & Future Improvements
+
+- **JWT stored in `localStorage`:** Vulnerable to XSS. A production iteration would use `httpOnly` cookies and implement Refresh Tokens with a server-side revocation list (Redis).
+- **No rate limiting:** Should be added before any public-facing deployment.
+- **No `SELECT FOR UPDATE` coverage in tests:** Due to SQLite limitations in CI. Future improvement would spin up a PostgreSQL container in the test environment.
