@@ -140,5 +140,6 @@ pytest api/tests/
   * **Security Trade-offs:** For this MVP, JWTs are stored in `localStorage` and lack a server-side revocation list (Redis). Production iterations would implement `httpOnly` cookies and Refresh Tokens.
   * **Configuration Management:** Replaced `load_dotenv` with **Pydantic Settings** (`BaseSettings`) for type-safe, validated environment variables. `database.py` consumes `settings.DATABASE_URL` directly, eliminating manual env parsing and centralizing configuration in a single source of truth.
   * **CI Pipeline:** Configured **GitHub Actions** to automatically run the test suite on every push, ensuring regressions are caught early without manual intervention.
+  * **Type Flexibility on DATABASE_URL:** Typed as `str` instead of Pydantic's `PostgresDsn` to support SQLite in CI/testing environments. Connection string validation is delegated to the database driver at runtime.
 -----
 
