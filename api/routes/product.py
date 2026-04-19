@@ -14,8 +14,12 @@ router = APIRouter()
 
 # 🔹 READ
 @router.get("/", response_model=list[Product])
-async def get_products(db: Session = Depends(get_db)):
-    return product_service.get_products(db=db)
+async def get_products(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 10
+):
+    return product_service.get_products(db=db, skip=skip, limit=limit)
 
 # 🔹 GET BY ID
 @router.get("/{product_id}", response_model= Product)

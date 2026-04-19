@@ -122,3 +122,13 @@ def test_delete_product(auth_client):
 def test_delete_product_not_found(auth_client):
     response = auth_client.delete("/products/9999")
     assert response.status_code == 404
+
+def test_create_product_invalid_price(auth_client):
+    response = auth_client.post("/products/", json={
+        "name": "Arroz",
+        "stock": 100,
+        "purchase_price": "10.00",
+        "sale_price": "5.00",  # menor que purchase_price
+        "unit": "kg"
+    })
+    assert response.status_code == 422

@@ -110,4 +110,3 @@ def test_update_product_invalid_price(db):
     with pytest.raises(InvalidPriceError):
         update_product(created.id, ProductUpdate(sale_price=Decimal("4.00")), db)
     
-    
