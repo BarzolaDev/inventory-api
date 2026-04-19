@@ -19,7 +19,7 @@ def authenticate_user(email: str, password_plain: str, db: Session) -> TokenResp
         .first()
         )
     except SQLAlchemyError:
-        logger.exception("Database error autehnticating user")
+        logger.exception("Database error authenticating user")
         raise
 
     if not db_user or not verify_password(password_plain, db_user.hashed_password):

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from datetime import datetime
 
-class MovementCreate(BaseModel):
+class MovementBase(BaseModel):
     quantity: int
 
     @field_validator("quantity")
@@ -11,7 +11,10 @@ class MovementCreate(BaseModel):
             raise ValueError("quantity must not be zero")
         return v
 
-class MovementResponse(MovementCreate):
+class MovementCreate(MovementBase):
+    pass
+
+class MovementResponse(MovementBase):
     id: int
     product_id: int  
     created_at: datetime

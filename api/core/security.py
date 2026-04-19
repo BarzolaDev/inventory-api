@@ -1,22 +1,11 @@
-import os
 from datetime import datetime, timedelta, timezone
 
-from jose import JWTError, jwt
-from dotenv import load_dotenv
+from api.core.settings import settings
+from jose import JWTError, jwt, ExpiredSignatureError
+from typing import Dict, Any
 from passlib.context import CryptContext
 
-
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(
-    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 30)
-)
-
-if not SECRET_KEY:
-    raise RuntimeError("SECRET_KEY is not set")
-
+ALGORITHM = "HS256"
 
 pwd_context = CryptContext(
     schemes=["argon2"],
@@ -35,27 +24,41 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(data: dict) -> str:
+def create_access_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
 
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
+    to_encode.update({
+        "exp": expire,
+        "iat": now,
+        "type": "access"
+    })
+
+    return jwt.encode(
+        to_encode,
+        settings.SECRET_KEY,
+        algorithm=ALGORITHM
     )
-
-    to_encode.update({"exp": expire})
-
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
 
 
 def verify_token(token: str) -> dict | None:
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[ALGORITHM], 
+        )
 
-        if payload.get("sub") is None:
+        sub = payload.get("sub")
+        if not sub:
             return None
 
         return payload
 
+    except ExpiredSignatureError:
+        return None  # token expirado
+
     except JWTError:
-        return None
+        return None  # token inválido
