@@ -18,7 +18,7 @@ router = APIRouter()
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED
 )
-async def register_user(
+def register_user(
     user_in: UserCreate,
     db: Session = Depends(get_db)
 ):
@@ -43,7 +43,7 @@ async def register_user(
 
 # 🔹 LOGIN
 @router.post("/login", response_model=TokenResponse)
-async def login(
+def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):

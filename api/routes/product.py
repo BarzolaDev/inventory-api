@@ -14,7 +14,7 @@ router = APIRouter()
 
 # 🔹 READ
 @router.get("/", response_model=list[Product])
-async def get_products(
+def get_products(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 10
@@ -23,7 +23,7 @@ async def get_products(
 
 # 🔹 GET BY ID
 @router.get("/{product_id}", response_model= Product)
-async def get_product(
+def get_product(
     product_id: int, 
     db: Session = Depends(get_db),
 ):
@@ -38,7 +38,7 @@ async def get_product(
 
 # 🔹 CREATE
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
-async def create_product(
+def create_product(
     product: ProductCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -58,7 +58,7 @@ async def create_product(
 
 # 🔹 UPDATE
 @router.patch("/{product_id}", response_model=Product)
-async def update_product(
+def update_product(
     product_id: int,
     product_in: ProductUpdate,
     db: Session = Depends(get_db),
@@ -92,7 +92,7 @@ async def update_product(
 
 # 🔹 UPDATE STOCK
 @router.post("/{product_id}/stock", response_model=Product)
-async def update_product_stock(
+def update_product_stock(
     product_id: int,
     movement: MovementCreate,
     db: Session = Depends(get_db),
@@ -126,7 +126,7 @@ async def update_product_stock(
 
 # 🔹 DELETE
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_product(
+def delete_product(
     product_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -149,7 +149,7 @@ async def delete_product(
 
 # 🔹 MOVEMENTS
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
-async def get_movements(
+def get_movements(
     product_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
