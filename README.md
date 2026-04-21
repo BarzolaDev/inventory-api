@@ -1,159 +1,149 @@
-# Inventory Management API
+# ⚙️ Inventory Management API
 
-Production-ready REST API for inventory management built with FastAPI.  
-Designed to ensure data consistency under concurrent operations, with automated testing and CI/CD integration.
+Production-oriented REST API built with FastAPI, focused on one thing:
+
+👉 Keeping data consistent under concurrent operations.
+
+Because real systems don't fail on CRUD — they fail under race conditions.
 
 ---
 
 ## 🌍 Live Demo
 
 Interactive API documentation:  
-[https://inventory-api-jpwh.onrender.com/docs](https://inventory-api-jpwh.onrender.com/docs)
+https://inventory-api-jpwh.onrender.com/docs
 
 ---
 
-## 🧠 Overview
+## 🧠 Why this project exists
 
-This project focuses on building a reliable backend system with:
+Most beginner APIs work fine… until real-world conditions hit:
 
-- Data consistency under concurrent operations
-- Clear separation of concerns via layered architecture
-- Automated testing and CI to ensure reliability
+- Multiple users modifying the same resource  
+- Race conditions corrupting data  
+- Business rules enforced inconsistently  
 
-The goal is to simulate real-world backend constraints beyond basic CRUD APIs.
-
----
-
-## ✨ Key Features
-
-- Product registration and signed stock movements with full audit trails
-- User management with JWT Authentication
-- Concurrency-safe stock operations (`SELECT FOR UPDATE`)
-- Clean Architecture with clear separation of responsibilities
-- Fully dockerized environment
-- Automated testing (unit + integration)
-- CI pipeline with GitHub Actions
+This project focuses on solving those problems.
 
 ---
 
-## 🧰 Tech Stack
+## 💥 Core Problem
 
-| Technology | Purpose |
-|------------|---------|
-| FastAPI | High-performance Web Framework |
-| SQLAlchemy | ORM & DB Toolkit |
-| PostgreSQL | Relational Database |
-| Pydantic | Validation & Settings |
-| Argon2 | Password Hashing |
-| JWT | Authentication |
-| Alembic | Migrations |
-| Docker | Containerization |
+How do you guarantee stock consistency when multiple requests hit the same product at the same time?
+
+### Naive flow:
+
+1. Read stock  
+2. Modify value  
+3. Save  
+
+### Under concurrency:
+
+```
+User A reads stock = 1
+User B reads stock = 1
+
+Both write → stock = -1 ❌
+```
+
+---
+
+## ✅ Solution
+
+- Row-level locking using `SELECT FOR UPDATE` inside database transactions,  
+  ensuring concurrent requests cannot read stale values before mutation  
+
+- Atomic stock operations  
+
+- Domain-level validation before persistence  
+
+👉 Result: **Stock remains consistent under concurrent requests**
 
 ---
 
 ## 🏗 Architecture
 
-```text
+```
 api/
-├── routes/    → Handles HTTP requests, delegates to services, maps HTTP errors
-├── services/  → Core business logic; raises domain exceptions
-├── models/    → SQLAlchemy ORM models
-├── schemas/   → Input/output validation via Pydantic
-├── core/      → Security (JWT, hashing) and global dependencies
-├── db/        → Engine, session management, and get_db dependency
-├── utils/     → Reusable helpers (e.g., commit_and_refresh)
-└── tests/     → Service-level and integration (HTTP) tests
+├── routes/    → HTTP handling, maps errors to status codes
+├── services/  → Business logic & domain rules
+├── models/    → Persistence (SQLAlchemy ORM)
+├── schemas/   → Input/output validation (Pydantic)
+├── core/      → JWT & password hashing
+├── db/        → Session management
+└── tests/     → Unit & integration tests
 ```
 
-Layered architecture ensures separation between HTTP, business logic, and persistence layers.
+Business logic stays independent from the web framework.
+
+This structure allows business rules to be tested independently  
+from the HTTP layer and database implementation.
 
 ---
 
-## ⚙️ Environment Variables
+## ⚙️ Key Engineering Decisions
 
-Create a `.env` file:
+### 🔒 Concurrency Control
+`SELECT FOR UPDATE` locks rows before mutation, preventing race conditions during simultaneous stock updates.
 
-```env
-DATABASE_URL=postgresql://user:password@host:port/dbname
-SECRET_KEY=your-secret-key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
+### 🧠 Domain-Driven Validation
+Business rules enforced in the service layer:
+- No negative stock  
+- Typed exceptions (`InsufficientStockError`, `ProductNotFoundError`)  
+- Mapped to HTTP responses in routes  
 
----
+### 🔐 Security
+- Argon2 password hashing (resistant to GPU/ASIC attacks)  
+- JWT-based authentication  
 
-## 🚀 Getting Started
-
-```bash
-docker compose up --build
-```
-
-Application will be available at: `http://localhost:8000/docs`
-
----
-
-## 📡 API Endpoints
-
-### Auth & Users
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/users/register` | User registration |
-| POST | `/users/login` | Login — returns Bearer Token |
-
-### Inventory
-
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/products/` | No | List products (pagination: `skip`, `limit`) |
-| GET | `/products/{id}` | No | Get product |
-| POST | `/products/` | Yes | Create product |
-| PATCH | `/products/{id}` | Yes | Update product |
-| DELETE | `/products/{id}` | Yes | Delete product |
-| POST | `/products/{id}/stock` | Yes | Update stock level |
-| GET | `/products/{id}/movements` | Yes | Stock movement history |
-
-> Stock movements use signed integers — **positive = restock**, **negative = sale/withdrawal**.
+### 🧪 Testing Strategy
+- Unit tests for business logic  
+- Integration tests for full HTTP flow  
+- CI via GitHub Actions on every push  
 
 ---
 
-## 🧪 Testing
+## ⚖️ Trade-offs
 
-```bash
-pytest api/tests/
-```
+### SQLite in Tests
 
-- **Service tests:** Direct business logic validation, covering happy paths and edge cases
-- **Integration tests:** Using `TestClient` to verify HTTP status codes, schemas, and auth middleware
+✔️ Fast, no DB server needed in CI  
+❌ No support for `SELECT FOR UPDATE`  
 
-Tests run automatically on every push via GitHub Actions.
+👉 Concurrency logic is validated in PostgreSQL (production)
 
----
-
-## 🧠 Engineering Decisions & Trade-offs
-
-- **Concurrency control with `SELECT FOR UPDATE`:** Stock mutation queries lock the row before reading, preventing race conditions during concurrent writes. This ensures stock levels stay consistent under simultaneous requests.
-
-- **Domain validation in the service layer:** Stock levels are validated before persistence, ensuring they never drop below zero. The service layer raises typed exceptions (`InsufficientStockError`, `ProductNotFoundError`) that routes catch and map to appropriate HTTP status codes — keeping business logic agnostic of the web layer.
-
-- **Argon2 over BCrypt for password hashing:** As the winner of the Password Hashing Competition, Argon2 provides superior resistance to GPU/ASIC attacks through memory-hard functions. BCrypt would have worked, but Argon2 is the current best practice.
-
-- **Dependency Injection via FastAPI `Depends()`:** Used for `get_db` and `get_current_user`, decoupling routes from resource instantiation. This aligns with the Dependency Inversion Principle and makes unit testing significantly easier.
-
-- **Alembic for database migrations:** Provides versioned, reproducible schema changes instead of manual `CREATE TABLE` scripts. This is essential for any project that evolves over time or runs across multiple environments.
-
-- **Pydantic `BaseSettings` over `load_dotenv`:** Environment variables are type-safe and validated at startup. `database.py` consumes `settings.DATABASE_URL` directly, centralizing configuration and eliminating manual `os.getenv()` calls scattered across the codebase.
-
-- **SQLite in tests, PostgreSQL in production:** SQLite keeps the test suite fast and dependency-free (no DB server needed in CI). The trade-off is that `SELECT FOR UPDATE` isn't supported in SQLite, so concurrency logic is validated against PostgreSQL in production rather than in automated tests.
-
-- **Docker for environment standardization:** Eliminates environment-specific bugs and makes the project runnable with a single command regardless of the host OS.
-
-- **Auto-increment IDs over UUIDs:** Chosen for simplicity and query performance. UUIDs would be preferable in distributed systems or scenarios requiring non-guessable public identifiers.
+This introduces a gap between test and production behavior,  
+which is an intentional trade-off for faster CI execution.
 
 ---
 
-## ⚠️ Known Limitations & Future Improvements
+## 🚧 Limitations (Real-world honesty)
 
-- **JWT stored in `localStorage`:** Vulnerable to XSS. A production iteration would use `httpOnly` cookies and implement Refresh Tokens with a server-side revocation list (Redis).
-- **No rate limiting:** Should be added before any public-facing deployment.
-- **No `SELECT FOR UPDATE` coverage in tests:** Due to SQLite limitations in CI. Future improvement would spin up a PostgreSQL container in the test environment.
+- JWT stored in localStorage (XSS risk in real-world scenarios)  
+- No rate limiting (vulnerable under high traffic)  
+- No refresh token strategy (short-lived sessions only)  
+
+---
+
+## 🔮 Next Iteration
+
+- Introduce refresh tokens with server-side revocation (Redis)  
+- Implement rate limiting middleware (Redis-based)  
+- Run PostgreSQL in CI to validate concurrency behavior  
+
+---
+
+## 🚀 Tech Stack
+
+FastAPI · PostgreSQL · SQLAlchemy · Pydantic  
+Argon2 · JWT · Alembic  
+Docker · Pytest · GitHub Actions  
+
+---
+
+## 🧠 Takeaway
+
+This project is not about building an API that works.
+
+It's about building one that keeps working  
+when multiple things happen at the same time.
