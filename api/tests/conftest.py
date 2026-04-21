@@ -4,6 +4,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
 
+from api.core.settings import settings
 from api.db.database import Base, get_db
 from api.main import app
 
@@ -38,7 +39,6 @@ def db():
 def client(db):
     def override_get_db():
         yield db
-
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as c:
         yield c
@@ -59,3 +59,40 @@ def auth_client(client):
     token = response.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     return client
+
+
+@pytest.fixture(scope="function")
+def pg_client():
+    pg_engine = create_engine(settings.TEST_POSTGRES_URL)  # ← usa settings
+    PgSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=pg_engine)
+
+    Base.metadata.create_all(bind=pg_engine)
+
+    def override_get_db():
+        db = PgSessionLocal()
+        try:
+            yield db
+        finally:
+            db.close()
+
+    app.dependency_overrides[get_db] = override_get_db
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
+    Base.metadata.drop_all(bind=pg_engine)
+
+
+@pytest.fixture(scope="function")
+def pg_auth_client(pg_client):
+    pg_client.post("/users/register", json={
+        "username": "testuser",
+        "email": "test@test.com",
+        "password": "secret123"
+    })
+    response = pg_client.post("/users/login", data={
+        "username": "test@test.com",
+        "password": "secret123"
+    })
+    token = response.json()["access_token"]
+    pg_client.headers.update({"Authorization": f"Bearer {token}"})
+    return pg_client
