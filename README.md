@@ -71,7 +71,7 @@ api/
 ├── schemas/   → Input/output validation (Pydantic)
 ├── core/      → JWT & password hashing
 ├── db/        → Session management
-└── tests/     → Unit & integration tests
+└── tests/     → Unit, integration & concurrency tests
 ```
 
 Business logic stays independent from the web framework.
@@ -97,9 +97,10 @@ Business rules enforced in the service layer:
 - JWT-based authentication  
 
 ### 🧪 Testing Strategy
-- Unit tests for business logic  
-- Integration tests for full HTTP flow  
-- CI via GitHub Actions on every push  
+- Unit tests for business logic
+- Integration tests for full HTTP flow
+- Concurrency tests against real PostgreSQL to validate `SELECT FOR UPDATE`
+- CI via GitHub Actions on every push
 
 ---
 
@@ -107,12 +108,13 @@ Business rules enforced in the service layer:
 
 ### SQLite in Tests
 
-✔️ Fast, no DB server needed in CI  
-❌ No support for `SELECT FOR UPDATE`  
+✔️ Fast, no DB server needed in CI
+❌ No support for `SELECT FOR UPDATE`
 
-👉 Concurrency logic is validated in PostgreSQL (production)
+👉 Concurrency tests run against real PostgreSQL to validate locking behavior.
+Unit and integration tests use SQLite for speed.
 
-This introduces a gap between test and production behavior,  
+This introduces a gap between test and production behavior,
 which is an intentional trade-off for faster CI execution.
 
 ---
@@ -129,7 +131,6 @@ which is an intentional trade-off for faster CI execution.
 
 - Introduce refresh tokens with server-side revocation (Redis)  
 - Implement rate limiting middleware (Redis-based)  
-- Run PostgreSQL in CI to validate concurrency behavior  
 
 ---
 
