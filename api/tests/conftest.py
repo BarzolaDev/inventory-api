@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from fastapi.testclient import TestClient
+from testcontainers.postgres import PostgresContainer
 
 from api.core.settings import settings
 from api.db.database import Base, get_db
@@ -61,25 +62,26 @@ def auth_client(client):
     return client
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="session")
 def pg_client():
-    pg_engine = create_engine(settings.TEST_POSTGRES_URL)  # ← usa settings
-    PgSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=pg_engine)
+    with PostgresContainer("postgres:16-alpine") as postgres:
+        pg_engine = create_engine(postgres.get_connection_url())
+        PgSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=pg_engine)
 
-    Base.metadata.create_all(bind=pg_engine)
+        Base.metadata.create_all(bind=pg_engine)
 
-    def override_get_db():
-        db = PgSessionLocal()
-        try:
-            yield db
-        finally:
-            db.close()
+        def override_get_db():
+            db = PgSessionLocal()
+            try:
+                yield db
+            finally:
+                db.close()
 
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
-    app.dependency_overrides.clear()
-    Base.metadata.drop_all(bind=pg_engine)
+        app.dependency_overrides[get_db] = override_get_db
+        with TestClient(app) as c:
+            yield c
+        app.dependency_overrides.clear()
+        Base.metadata.drop_all(bind=pg_engine)
 
 
 @pytest.fixture(scope="function")
