@@ -52,7 +52,11 @@ def verify_token(token: str) -> dict | None:
         )
 
         sub = payload.get("sub")
+
         if not sub:
+            return None
+
+        if payload.get("type") != "access":
             return None
 
         return payload
