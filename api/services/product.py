@@ -2,6 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
+from api.domain.exceptions import ProductNotFoundError, InsufficientStockError, InvalidPriceError
 
 from api.models.product import Product
 from api.models.movement import StockMovement
@@ -12,16 +13,6 @@ from api.utils.db_utils import commit_and_refresh
 logger = logging.getLogger(__name__)
 
 
-# 🔹 Excepciones de dominio
-class ProductNotFoundError(Exception):
-    pass
-
-
-class InsufficientStockError(Exception):
-    pass
-
-class InvalidPriceError(Exception):
-    pass
 
 # 🔹 CREATE
 def create_product(db: Session, product_data: ProductCreate):
