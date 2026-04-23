@@ -8,7 +8,6 @@ class ProductBase(BaseModel):
     purchase_price: Decimal = Field(ge=0, decimal_places=2)
     sale_price: Decimal = Field(ge=0, decimal_places=2)
 
-
     # 🔹 Validaciones
     @model_validator(mode="after")
     def sale_price_must_be_grater(self):
