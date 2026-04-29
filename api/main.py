@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.routes import product, user
+from api.core.redis_client import init_redis, close_redis
 
 app = FastAPI()
 
@@ -10,7 +11,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 app.include_router(
     product.router,
