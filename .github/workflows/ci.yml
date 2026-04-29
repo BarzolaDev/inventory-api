@@ -42,3 +42,4 @@ jobs:
           DATABASE_URL: "sqlite:///:memory:"
           SECRET_KEY: testsecretkey
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          REDIS_URL: "redis://localhost:6379"
