@@ -137,9 +137,7 @@ which is an intentional trade-off for faster CI execution.
 
 ## 🚀 Tech Stack
 
-FastAPI · PostgreSQL · SQLAlchemy · Pydantic  
-Argon2 · JWT · Alembic  
-Docker · Pytest · GitHub Actions  
+FastAPI · PostgreSQL · SQLAlchemy · Pydantic · Argon2 · JWT · Alembic · Docker · Pytest · Testcontainers · GitHub Actions
 
 ---
 
