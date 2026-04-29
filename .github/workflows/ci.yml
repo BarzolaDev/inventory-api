@@ -42,4 +42,3 @@ jobs:
           DATABASE_URL: "sqlite:///:memory:"
           SECRET_KEY: testsecretkey
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
-          TEST_POSTGRES_URL: "postgresql://user:password@localhost:5432/dbname"

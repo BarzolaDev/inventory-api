@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta, timezone
+from typing import Dict, Any
+import uuid
 
 from api.core.settings import settings
 from jose import JWTError, jwt, ExpiredSignatureError
-from typing import Dict, Any
 from passlib.context import CryptContext
 
 ALGORITHM = "HS256"
@@ -26,43 +27,36 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(data: Dict[str, Any]) -> str:
     to_encode = data.copy()
-
     now = datetime.now(timezone.utc)
     expire = now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-
-    to_encode.update({
-        "exp": expire,
-        "iat": now,
-        "type": "access"
-    })
-
-    return jwt.encode(
-        to_encode,
-        settings.SECRET_KEY,
-        algorithm=ALGORITHM
-    )
-
+    to_encode.update({"exp": expire, "iat": now, "type": "access", "jti": str(uuid.uuid4())})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_token(token: str) -> dict | None:
     try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[ALGORITHM], 
-        )
-
-        sub = payload.get("sub")
-
-        if not sub:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        if not payload.get("sub"):
             return None
-
         if payload.get("type") != "access":
             return None
-
         return payload
-
     except ExpiredSignatureError:
-        return None  # token expirado
-
+        return None
     except JWTError:
-        return None  # token inválido
+        return None
+
+def create_refresh_token(data: Dict[str, Any]) -> str:
+    to_encode = data.copy()
+    now = datetime.now(timezone.utc)
+    expire = now + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "iat": now, "type": "refresh", "jti": str(uuid.uuid4())})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
+
+def verify_refresh_token(token: str) -> dict | None:
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+        if payload.get("type") != "refresh":
+            return None
+        return payload
+    except (ExpiredSignatureError, JWTError):
+        return None

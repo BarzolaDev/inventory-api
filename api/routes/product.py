@@ -11,6 +11,8 @@ from api.models.user import User
 
 router = APIRouter()
 
+# 🔹 
+
 
 # 🔹 READ
 @router.get("/", response_model=list[Product])

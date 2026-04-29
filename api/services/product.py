@@ -1,4 +1,5 @@
 import logging
+import httpx
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -13,15 +14,18 @@ from api.utils.db_utils import commit_and_refresh
 logger = logging.getLogger(__name__)
 
 
+# 🔹 Get Dolar
+async def get_dolar_rate() -> float:
+    async with httpx.AsyncClient() as client: 
+        response = await client.get("https://dolarapi.com/v1/dolares/oficial")
+        return response.json()["venta"]
 
-# 🔹 CREATE
+# 🔹 Create Product
 def create_product(db: Session, product_data: ProductCreate):
     db_product = Product(**product_data.model_dump())
-
     return commit_and_refresh(db, db_product, action="create_product")
 
-
-# 🔹 READ
+# 🔹 Get Products
 def get_products(db: Session, skip: int = 0, limit: int = 10):
     try:
         return (
@@ -34,7 +38,7 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
         logger.exception("Database error fetching products")
         raise
 
-# 🔹READ BY ID
+# 🔹Product by id
 def get_product_by_id(product_id: int, db: Session):
     try:
         db_product = (
@@ -52,7 +56,7 @@ def get_product_by_id(product_id: int, db: Session):
     return db_product
 
 
-# 🔹 UPDATE (fields)
+# 🔹 Update (Product)
 def update_product(product_id: int, product_data: ProductUpdate, db: Session):
     try:
         db_product = (
@@ -77,7 +81,7 @@ def update_product(product_id: int, product_data: ProductUpdate, db: Session):
     return commit_and_refresh(db, db_product, action="update_product")
 
 
-# 🔹 UPDATE (stock)
+# 🔹 Update (stock)
 def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
     try:
         db_product = (
@@ -114,7 +118,7 @@ def update_stock(product_id: int, movement_data: MovementCreate, db: Session):
         raise
 
 
-# 🔹 DELETE
+# 🔹 DELETE 
 def delete_product(product_id: int, db: Session):
     try:
         db_product = (
@@ -136,7 +140,7 @@ def delete_product(product_id: int, db: Session):
         raise
 
 
-# 🔹 MOVEMENTS
+# 🔹 Movements
 def get_movements(product_id: int, db: Session):
     try:
         return (

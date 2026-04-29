@@ -68,6 +68,7 @@ api/
 ├── routes/    → HTTP handling, maps errors to status codes
 ├── services/  → Business logic & domain rules
 ├── models/    → Persistence (SQLAlchemy ORM)
+├── domain/    → Domain exceptions (InsufficientStockError, ProductNotFoundError)
 ├── schemas/   → Input/output validation (Pydantic)
 ├── core/      → JWT & password hashing
 ├── db/        → Session management
@@ -95,12 +96,13 @@ Business rules enforced in the service layer:
 ### 🔐 Security
 - Argon2 password hashing (resistant to GPU/ASIC attacks)  
 - JWT-based authentication  
+- Refresh tokens with rotation and server-side revocation (PostgreSQL)
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
 - Integration tests for full HTTP flow
-- Concurrency tests against real PostgreSQL to validate `SELECT FOR UPDATE`
 - CI via GitHub Actions on every push
+- Concurrency tests against real PostgreSQL via Testcontainers to validate `SELECT FOR UPDATE`
 
 ---
 
@@ -123,14 +125,13 @@ which is an intentional trade-off for faster CI execution.
 
 - JWT stored in localStorage (XSS risk in real-world scenarios)  
 - No rate limiting (vulnerable under high traffic)  
-- No refresh token strategy (short-lived sessions only)  
 
 ---
 
 ## 🔮 Next Iteration
 
-- Introduce refresh tokens with server-side revocation (Redis)  
-- Implement rate limiting middleware (Redis-based)  
+- Implement rate limiting middleware (Redis-based)
+- Migrate refresh token storage to Redis for faster revocation lookups
 
 ---
 

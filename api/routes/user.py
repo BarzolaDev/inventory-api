@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from api.schemas.user import UserCreate, UserResponse
-from api.schemas.auth import TokenResponse
+from api.schemas.auth import TokenResponse, RefreshTokenRequest
 
 from api.services import auth, user
 from api.db.database import get_db
@@ -61,8 +61,19 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
-
+# 🔹 REFRESH TOKEN
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(
+    body: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
+    try:
+        return auth.refresh_access_token(body.refresh_token, db)
+    except auth.InvalidCredentialsError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token"
+        )
 
 
 
