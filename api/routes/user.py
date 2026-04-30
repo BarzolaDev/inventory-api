@@ -37,7 +37,7 @@ async def login(
 ):
     await rate_limit(request, limit=5, window=60)  
     try:
-        return auth.authenticate_user(email=form_data.username, password_plain=form_data.password, db=db)
+        return await auth.authenticate_user(email=form_data.username, password_plain=form_data.password, db=db)
     except auth.InvalidCredentialsError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials", headers={"WWW-Authenticate": "Bearer"})
 
@@ -51,7 +51,7 @@ async def refresh_token(
 ):
     await rate_limit(request, limit=20, window=60) 
     try:
-        return auth.refresh_access_token(body.refresh_token, db)
+        return await auth.refresh_access_token(body.refresh_token, db)
     except auth.InvalidCredentialsError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
 
