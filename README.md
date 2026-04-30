@@ -60,6 +60,7 @@ Both write → stock = -1 ❌
 ---
 
 ## 🏗 Architecture
+```
 api/
 ├── routes/    → HTTP handling, maps errors to status codes
 ├── services/  → Business logic & domain rules
@@ -69,6 +70,7 @@ api/
 ├── core/      → JWT, password hashing & rate limiting
 ├── db/        → Session management
 └── tests/     → Unit, integration & concurrency tests
+```
 
 Business logic stays independent from the web framework.
 
