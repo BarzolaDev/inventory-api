@@ -43,10 +43,18 @@ def mock_redis(request):
     if request.node.get_closest_marker("real_redis"):
         yield
         return
+
+    store = {}
+
     mock = AsyncMock()
     mock.incr.return_value = 1
     mock.expire.return_value = True
-    with patch("api.core.rate_limiter.get_redis", return_value=mock):
+    mock.set.side_effect = lambda k, v, ex=None: store.update({k: v})
+    mock.get.side_effect = lambda k: store.get(k)
+    mock.delete.side_effect = lambda k: store.pop(k, None)
+
+    with patch("api.core.rate_limiter.get_redis", return_value=mock), \
+         patch("api.services.auth.get_redis", return_value=mock):
         yield
 
 @pytest.fixture(scope="function")
