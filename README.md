@@ -93,7 +93,7 @@ Business rules enforced in the service layer:
 ### 🔐 Security
 - Argon2 password hashing (resistant to GPU/ASIC attacks)  
 - JWT-based authentication  
-- Refresh tokens with rotation and server-side revocation (PostgreSQL)
+- Refresh tokens with rotation and server-side revocation (Redis)
 - Rate limiting on auth endpoints (Redis) — `/login` capped at 5 req/min, `/register` at 10 req/hour
 
 ### 🧪 Testing Strategy
@@ -124,18 +124,6 @@ which is an intentional trade-off for faster CI execution.
 ❌ Mock doesn't validate real rate limiting behavior
 
 👉 Concurrency tests run against real Redis via Testcontainers to validate blocking behavior.
-
----
-
-## 🚧 Limitations (Real-world honesty)
-
-- JWT stored in localStorage (XSS risk in real-world scenarios)
-
----
-
-## 🔮 Next Iteration
-
-- Migrate refresh token storage to Redis for faster revocation lookups
 
 ---
 
