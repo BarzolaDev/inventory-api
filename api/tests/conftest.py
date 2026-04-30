@@ -1,4 +1,6 @@
 import pytest
+from unittest.mock import AsyncMock, patch
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -35,6 +37,14 @@ def db():
         db.close()
         Base.metadata.drop_all(bind=engine)
 
+
+@pytest.fixture(autouse=True)
+def mock_redis():
+    mock = AsyncMock()
+    mock.incr.return_value = 1      # siempre primer intento
+    mock.expire.return_value = True
+    with patch("api.core.rate_limiter.get_redis", return_value=mock):
+        yield
 
 @pytest.fixture(scope="function")
 def client(db):
