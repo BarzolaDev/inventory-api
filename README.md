@@ -38,13 +38,9 @@ How do you guarantee stock consistency when multiple requests hit the same produ
 3. Save  
 
 ### Under concurrency:
-
-```
 User A reads stock = 1
 User B reads stock = 1
-
 Both write → stock = -1 ❌
-```
 
 ---
 
@@ -55,25 +51,24 @@ Both write → stock = -1 ❌
 
 - Atomic stock operations  
 
-- Domain-level validation before persistence  
+- Domain-level validation before persistence
+
+- Rate limiting on auth endpoints via Redis, preventing brute force attacks
 
 👉 Result: **Stock remains consistent under concurrent requests**
 
 ---
 
 ## 🏗 Architecture
-
-```
 api/
 ├── routes/    → HTTP handling, maps errors to status codes
 ├── services/  → Business logic & domain rules
 ├── models/    → Persistence (SQLAlchemy ORM)
 ├── domain/    → Domain exceptions (InsufficientStockError, ProductNotFoundError)
 ├── schemas/   → Input/output validation (Pydantic)
-├── core/      → JWT & password hashing
+├── core/      → JWT, password hashing & rate limiting
 ├── db/        → Session management
 └── tests/     → Unit, integration & concurrency tests
-```
 
 Business logic stays independent from the web framework.
 
@@ -97,12 +92,14 @@ Business rules enforced in the service layer:
 - Argon2 password hashing (resistant to GPU/ASIC attacks)  
 - JWT-based authentication  
 - Refresh tokens with rotation and server-side revocation (PostgreSQL)
+- Rate limiting on auth endpoints (Redis) — `/login` capped at 5 req/min, `/register` at 10 req/hour
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
-- Integration tests for full HTTP flow
+- Integration tests for full HTTP flow (Redis mocked for isolation)
 - CI via GitHub Actions on every push
 - Concurrency tests against real PostgreSQL via Testcontainers to validate `SELECT FOR UPDATE`
+- Concurrency tests against real Redis via Testcontainers to validate rate limiting behavior
 
 ---
 
@@ -110,36 +107,41 @@ Business rules enforced in the service layer:
 
 ### SQLite in Tests
 
-✔️ Fast, no DB server needed in CI
+✔️ Fast, no DB server needed in CI  
 ❌ No support for `SELECT FOR UPDATE`
 
-👉 Concurrency tests run against real PostgreSQL to validate locking behavior.
+👉 Concurrency tests run against real PostgreSQL to validate locking behavior.  
 Unit and integration tests use SQLite for speed.
 
-This introduces a gap between test and production behavior,
+This introduces a gap between test and production behavior,  
 which is an intentional trade-off for faster CI execution.
+
+### Redis in Tests
+
+✔️ Integration tests mock Redis for speed and isolation  
+❌ Mock doesn't validate real rate limiting behavior
+
+👉 Concurrency tests run against real Redis via Testcontainers to validate blocking behavior.
 
 ---
 
 ## 🚧 Limitations (Real-world honesty)
 
-- JWT stored in localStorage (XSS risk in real-world scenarios)  
-- No rate limiting (vulnerable under high traffic)  
+- JWT stored in localStorage (XSS risk in real-world scenarios)
 
 ---
 
 ## 🔮 Next Iteration
 
-- Implement rate limiting middleware (Redis-based)
 - Migrate refresh token storage to Redis for faster revocation lookups
 
 ---
 
 ## 🚀 Tech Stack
 
-FastAPI · PostgreSQL · SQLAlchemy · 
-Pydantic · Argon2 · JWT · Alembic · 
-Docker · Pytest · Testcontainers · 
+FastAPI · PostgreSQL · SQLAlchemy ·  
+Pydantic · Argon2 · JWT · Alembic ·  
+Docker · Redis · Pytest · Testcontainers ·  
 GitHub Actions
 
 ---
