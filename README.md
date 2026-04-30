@@ -25,6 +25,8 @@ Most beginner APIs work fine… until real-world conditions hit:
 
 This project focuses on solving those problems.
 
+This project intentionally goes beyond MVP scope — concurrency control, Redis-based token management, and real infrastructure testing — to understand how production systems handle these problems before encountering them at scale.
+
 ---
 
 ## 💥 Core Problem
@@ -142,3 +144,4 @@ This project is not about building an API that works.
 
 It's about building one that keeps working  
 when multiple things happen at the same time.
+
