@@ -39,9 +39,12 @@ def db():
 
 
 @pytest.fixture(autouse=True)
-def mock_redis():
+def mock_redis(request):
+    if request.node.get_closest_marker("real_redis"):
+        yield
+        return
     mock = AsyncMock()
-    mock.incr.return_value = 1      # siempre primer intento
+    mock.incr.return_value = 1
     mock.expire.return_value = True
     with patch("api.core.rate_limiter.get_redis", return_value=mock):
         yield
