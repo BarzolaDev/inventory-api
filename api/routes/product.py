@@ -9,10 +9,10 @@ from api.services import product as product_service
 from api.core.depends import get_current_user
 from api.models.user import User
 
+import logging
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
-
-# 🔹 
-
 
 # 🔹 READ
 @router.get("/", response_model=list[Product])
@@ -24,19 +24,18 @@ def get_products(
     return product_service.get_products(db=db, skip=skip, limit=limit)
 
 # 🔹 GET BY ID
-@router.get("/{product_id}", response_model= Product)
+@router.get("/{product_id}", response_model=Product)
 def get_product(
-    product_id: int, 
+    product_id: int,
     db: Session = Depends(get_db),
 ):
     try:
-        return product_service.get_product_by_id(product_id, db) 
+        return product_service.get_product_by_id(product_id, db)
     except product_service.ProductNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
-
 
 # 🔹 CREATE
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
@@ -46,17 +45,12 @@ def create_product(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return product_service.create_product(
-            db=db,
-            product_data=product
-        )
-
+        result = product_service.create_product(db=db, product_data=product)
+        logger.info(f"Producto creado - user: {current_user.id}")
+        return result
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error creating product"
-        )
-
+        logger.error(f"Error creando producto - user: {current_user.id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating product")
 
 # 🔹 UPDATE
 @router.patch("/{product_id}", response_model=Product)
@@ -67,30 +61,22 @@ def update_product(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return product_service.update_product(
+        result = product_service.update_product(
             product_id=product_id,
             product_data=product_in,
             db=db
         )
-
+        logger.info(f"Producto actualizado - product_id: {product_id} - user: {current_user.id}")
+        return result
     except product_service.ProductNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-        
+        logger.warning(f"Producto no encontrado - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except product_service.InvalidPriceError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
+        logger.warning(f"Precio inválido - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating product"
-        )
-
+        logger.error(f"Error actualizando producto - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating product")
 
 # 🔹 UPDATE STOCK
 @router.post("/{product_id}/stock", response_model=Product)
@@ -101,30 +87,18 @@ def update_product_stock(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        return product_service.update_stock(
-            product_id=product_id,
-            movement_data=movement,
-            db=db
-        )
-
+        result = product_service.update_stock(product_id=product_id, movement_data=movement, db=db)
+        logger.info(f"Stock actualizado - product_id: {product_id} - user: {current_user.id}")
+        return result
     except product_service.ProductNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-
+        logger.warning(f"Producto no encontrado - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except product_service.InsufficientStockError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-
+        logger.warning(f"Stock insuficiente - product_id: {product_id} - user: {current_user.id}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error updating stock"
-        )
-
+        logger.error(f"Error actualizando stock - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating stock")
 
 # 🔹 DELETE
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -135,19 +109,13 @@ def delete_product(
 ):
     try:
         product_service.delete_product(product_id=product_id, db=db)
-
+        logger.warning(f"Producto eliminado - product_id: {product_id} - user: {current_user.id}")
     except product_service.ProductNotFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
-
+        logger.warning(f"Intento de eliminar producto inexistente - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error deleting product"
-        )
-
+        logger.error(f"Error eliminando producto - product_id: {product_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting product")
 
 # 🔹 MOVEMENTS
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
