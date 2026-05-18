@@ -58,7 +58,7 @@ async def refresh_token(
     body: RefreshTokenRequest,
     db: Session = Depends(get_db)
 ):
-    await rate_limit(request, limit=20, window=60) 
+    await rate_limit(request, limit=5, window=60) 
     try:
         result = await auth.refresh_access_token(body.refresh_token, db)
         logger.info(f"Token refreshed - IP: {request.client.host}")

@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from redis.asyncio import Redis
 
 from api.schemas.product import ProductCreate, ProductUpdate, Product
 from api.schemas.movement import MovementCreate, MovementResponse
@@ -7,6 +8,8 @@ from api.schemas.movement import MovementCreate, MovementResponse
 from api.db.database import get_db
 from api.services import product as product_service
 from api.core.depends import get_current_user
+from api.core.redis_client import get_redis
+from api.core.rate_limiter import rate_limit
 from api.models.user import User
 
 import logging
@@ -39,11 +42,14 @@ def get_product(
 
 # 🔹 CREATE
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
-def create_product(
+async def create_product(
+    request: Request,
     product: ProductCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    redis: Redis = Depends(get_redis)
 ):
+    await rate_limit(request, limit=20, window=60, redis=redis)
     try:
         result = product_service.create_product(db=db, product_data=product)
         logger.info(f"Producto creado - user: {current_user.id}")
@@ -52,14 +58,17 @@ def create_product(
         logger.error(f"Error creando producto - user: {current_user.id}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating product")
 
-# 🔹 UPDATE
+# 🔹 UPDATE PRODUCT
 @router.patch("/{product_id}", response_model=Product)
-def update_product(
+async def update_product(
+    request: Request,
     product_id: int,
     product_in: ProductUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    redis: Redis = Depends(get_redis)
 ):
+    await rate_limit(request, limit=20, window=60, redis=redis)
     try:
         result = product_service.update_product(
             product_id=product_id,
@@ -80,12 +89,15 @@ def update_product(
 
 # 🔹 UPDATE STOCK
 @router.post("/{product_id}/stock", response_model=Product)
-def update_product_stock(
+async def update_product_stock(
+    request: Request,
     product_id: int,
     movement: MovementCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    redis: Redis = Depends(get_redis)
 ):
+    await rate_limit(request, limit=10, window=60, redis=redis)
     try:
         result = product_service.update_stock(product_id=product_id, movement_data=movement, db=db)
         logger.info(f"Stock actualizado - product_id: {product_id} - user: {current_user.id}")
@@ -102,11 +114,14 @@ def update_product_stock(
 
 # 🔹 DELETE
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_product(
+async def delete_product(
+    request: Request,
     product_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    redis: Redis = Depends(get_redis)
 ):
+    await rate_limit(request, limit=5, window=60, redis=redis)
     try:
         product_service.delete_product(product_id=product_id, db=db)
         logger.warning(f"Producto eliminado - product_id: {product_id} - user: {current_user.id}")
