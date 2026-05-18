@@ -22,8 +22,11 @@ def real_redis_client(pg_client):
             encoding="utf-8",
             decode_responses=True
         )
-        redis_module.redis_client = async_client
-        yield pg_client
+
+        with patch("api.core.rate_limiter.get_redis", return_value=async_client), \
+             patch("api.services.auth.get_redis", return_value=async_client):
+            redis_module.redis_client = async_client
+            yield pg_client
 
 @pytest.mark.real_redis
 def test_rate_limit_blocks_after_limit(real_redis_client):

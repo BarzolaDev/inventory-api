@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from api.middleware.rate_limit_middleware import RateLimitMiddleware
 from api.routes import product, user
 from api.core.redis_client import init_redis, close_redis
 
@@ -11,6 +12,7 @@ async def lifespan(app: FastAPI):
     await close_redis()  # shutdown
 
 app = FastAPI(lifespan=lifespan)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

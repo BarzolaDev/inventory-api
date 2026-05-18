@@ -98,9 +98,15 @@ def pg_client():
             finally:
                 db.close()
 
+        mock = AsyncMock()
+        mock.incr.return_value = 1
+        mock.expire.return_value = True
+
         app.dependency_overrides[get_db] = override_get_db
-        with TestClient(app) as c:
-            yield c
+        with patch("api.core.rate_limiter.get_redis", return_value=mock), \
+             patch("api.services.auth.get_redis", return_value=mock):
+            with TestClient(app) as c:
+                yield c
         app.dependency_overrides.clear()
         Base.metadata.drop_all(bind=pg_engine)
 

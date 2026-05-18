@@ -11,6 +11,9 @@ async def rate_limit(
     if redis is None:
         redis = await get_redis()
 
+    if redis is None:
+        return  # Redis no disponible, skip rate limiting
+
     client_id = request.headers.get("Authorization") or request.client.host
     key = f"rate_limit:{request.url.path}:{client_id}"
 
