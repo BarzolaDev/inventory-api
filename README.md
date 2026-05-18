@@ -61,7 +61,6 @@ Both write → stock = -1 ❌
 
 ---
 
-```markdown
 ## 🏗 Architecture
 ```
 api/
@@ -74,7 +73,6 @@ api/
 ├── middleware/ → Rate limiting middleware (applied to all endpoints)
 ├── db/         → Session management
 └── tests/      → Unit, integration & concurrency tests
-```
 ```
 
 Business logic stays independent from the web framework.
