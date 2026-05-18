@@ -61,17 +61,20 @@ Both write → stock = -1 ❌
 
 ---
 
+```markdown
 ## 🏗 Architecture
 ```
 api/
-├── routes/    → HTTP handling, maps errors to status codes
-├── services/  → Business logic & domain rules
-├── models/    → Persistence (SQLAlchemy ORM)
-├── domain/    → Domain exceptions (InsufficientStockError, ProductNotFoundError)
-├── schemas/   → Input/output validation (Pydantic)
-├── core/      → JWT, password hashing & rate limiting
-├── db/        → Session management
-└── tests/     → Unit, integration & concurrency tests
+├── routes/     → HTTP handling, maps errors to status codes
+├── services/   → Business logic & domain rules
+├── models/     → Persistence (SQLAlchemy ORM)
+├── domain/     → Domain exceptions (InsufficientStockError, ProductNotFoundError)
+├── schemas/    → Input/output validation (Pydantic)
+├── core/       → JWT, password hashing & rate limiting
+├── middleware/ → Rate limiting middleware (applied to all endpoints)
+├── db/         → Session management
+└── tests/      → Unit, integration & concurrency tests
+```
 ```
 
 Business logic stays independent from the web framework.
@@ -96,7 +99,14 @@ Business rules enforced in the service layer:
 - Argon2 password hashing (resistant to GPU/ASIC attacks)  
 - JWT-based authentication  
 - Refresh tokens with rotation and server-side revocation (Redis)
-- Rate limiting on auth endpoints (Redis) — `/login` capped at 5 req/min, `/register` at 10 req/hour
+- Rate limiting via middleware (Redis) — applied to all endpoints:
+  - `/users/login` → 5 req/min
+  - `/users/register` → 10 req/hour
+  - `/users/refresh` → 5 req/min
+  - `POST /products/{id}/stock` → 10 req/min
+  - `POST /products` and `PATCH` → 20 req/min
+  - `DELETE` → 5 req/min
+  - `GET` → 100 req/min
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
