@@ -29,7 +29,7 @@ This project intentionally goes beyond MVP scope — concurrency control, Redis-
 
 ---
 
-## 💥 Core Problem
+## 💥 Core Problem:
 
 How do you guarantee stock consistency when multiple requests hit the same product at the same time?
 
