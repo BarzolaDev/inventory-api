@@ -97,6 +97,7 @@ Business rules enforced in the service layer:
 - Argon2 password hashing (resistant to GPU/ASIC attacks)  
 - JWT-based authentication  
 - Refresh tokens with rotation and server-side revocation (Redis)
+- Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense before requests reach the app
 - Rate limiting via middleware (Redis) — applied to all endpoints:
   - `/users/login` → 5 req/min
   - `/users/register` → 10 req/hour
