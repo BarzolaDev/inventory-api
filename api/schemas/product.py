@@ -8,7 +8,6 @@ class ProductBase(BaseModel):
     purchase_price: Decimal = Field(ge=0, decimal_places=2)
     sale_price: Decimal = Field(ge=0, decimal_places=2)
 
-    # 🔹 Validaciones
     @model_validator(mode="after")
     def sale_price_must_be_grater(self):
         if self.sale_price <= self.purchase_price:
@@ -27,5 +26,5 @@ class ProductUpdate(BaseModel):
 
 class Product(ProductBase):
     id: int
+    owner_id: int
     model_config = ConfigDict(from_attributes=True)
-

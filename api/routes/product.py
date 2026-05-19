@@ -8,6 +8,7 @@ from api.db.database import get_db
 from api.services import product as product_service
 from api.core.depends import get_current_user
 from api.models.user import User
+from api.domain.exceptions import UnauthorizedError
 
 import logging
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def create_product(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        result = product_service.create_product(db=db, product_data=product)
+        result = product_service.create_product(db=db, product_data=product, owner_id=current_user.id)
         logger.info(f"Producto creado - user: {current_user.id}")
         return result
     except Exception:
@@ -58,13 +59,15 @@ def update_product(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        result = product_service.update_product(product_id=product_id, product_data=product_in, db=db)
+        result = product_service.update_product(product_id=product_id, product_data=product_in, db=db, owner_id=current_user.id)
         logger.info(f"Producto actualizado - product_id: {product_id} - user: {current_user.id}")
         return result
     except product_service.ProductNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except product_service.InvalidPriceError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating product")
 
@@ -77,13 +80,15 @@ def update_product_stock(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        result = product_service.update_stock(product_id=product_id, movement_data=movement, db=db)
+        result = product_service.update_stock(product_id=product_id, movement_data=movement, db=db, owner_id=current_user.id)
         logger.info(f"Stock actualizado - product_id: {product_id} - user: {current_user.id}")
         return result
     except product_service.ProductNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except product_service.InsufficientStockError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error updating stock")
 
@@ -95,10 +100,12 @@ def delete_product(
     current_user: User = Depends(get_current_user)
 ):
     try:
-        product_service.delete_product(product_id=product_id, db=db)
+        product_service.delete_product(product_id=product_id, db=db, owner_id=current_user.id)
         logger.warning(f"Producto eliminado - product_id: {product_id} - user: {current_user.id}")
     except product_service.ProductNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except UnauthorizedError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error deleting product")
 

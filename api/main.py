@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from api.middleware.rate_limit_middleware import RateLimitMiddleware
 from api.routes import product, user
@@ -7,13 +7,19 @@ from api.core.redis_client import init_redis, close_redis
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_redis()  # startup
+    await init_redis()
     yield
-    await close_redis()  # shutdown
+    await close_redis()
 
 app = FastAPI(lifespan=lifespan)
-app.add_middleware(RateLimitMiddleware)
 
+@app.middleware("http")
+async def remove_server_header(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["server"] = "unknown"
+    return response
+
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,6 +29,5 @@ app.add_middleware(
 
 app.include_router(product.router, prefix="/products", tags=["Products"])
 app.include_router(user.router, prefix="/users", tags=["Users"])
-
         
 
