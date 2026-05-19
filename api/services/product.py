@@ -80,12 +80,16 @@ def update_product(product_id: int, product_data: ProductUpdate, db: Session, ow
 # 🔹 Update (stock)
 def update_stock(product_id: int, movement_data: MovementCreate, db: Session, owner_id: int):
     try:
+        logger.info(f"stock_lock_waiting - product_id={product_id} user={owner_id} delta={movement_data.quantity}")
+
         db_product = (
             db.query(Product)
             .filter(Product.id == product_id)
-            .with_for_update()
+            .with_for_update() 
             .first()
         )
+
+        logger.info(f"stock_lock_acquired - product_id={product_id} user={owner_id}")
 
         if not db_product:
             raise ProductNotFoundError("Product not found")
@@ -93,9 +97,11 @@ def update_stock(product_id: int, movement_data: MovementCreate, db: Session, ow
         if db_product.owner_id != owner_id:
             raise UnauthorizedError("Not authorized to update this product's stock")
 
-        new_stock = db_product.stock + movement_data.quantity
+        stock_before = db_product.stock
+        new_stock = stock_before + movement_data.quantity
 
         if new_stock < 0:
+            logger.warning(f"stock_insufficient - product_id={product_id} user={owner_id} current={stock_before} requested={movement_data.quantity}")
             raise InsufficientStockError("Insufficient stock")
 
         db_movement = StockMovement(
@@ -109,11 +115,13 @@ def update_stock(product_id: int, movement_data: MovementCreate, db: Session, ow
         db.commit()
         db.refresh(db_product)
 
+        logger.info(f"stock_updated - product_id={product_id} user={owner_id} before={stock_before} after={new_stock} delta={movement_data.quantity}")
+
         return db_product
 
     except SQLAlchemyError:
         db.rollback()
-        logger.exception("Database error updating stock")
+        logger.exception(f"stock_db_error - product_id={product_id} user={owner_id}")
         raise
 
 

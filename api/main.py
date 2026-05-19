@@ -2,8 +2,10 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from api.middleware.rate_limit_middleware import RateLimitMiddleware
+from api.middleware.logging_middleware import LoggingMiddleware
 from api.routes import product, user
 from api.core.redis_client import init_redis, close_redis
+import api.core.logging  
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +21,7 @@ async def remove_server_header(request: Request, call_next):
     response.headers["server"] = "unknown"
     return response
 
+app.add_middleware(LoggingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
@@ -29,5 +32,3 @@ app.add_middleware(
 
 app.include_router(product.router, prefix="/products", tags=["Products"])
 app.include_router(user.router, prefix="/users", tags=["Users"])
-        
-

@@ -70,7 +70,7 @@ api/
 ├── domain/     → Domain exceptions (InsufficientStockError, ProductNotFoundError)
 ├── schemas/    → Input/output validation (Pydantic)
 ├── core/       → JWT, password hashing & rate limiting
-├── middleware/ → Rate limiting middleware (applied to all endpoints)
+├── middleware/ → Rate limiting + structured audit logging
 ├── db/         → Session management
 └── tests/      → Unit, integration & concurrency tests
 ```
@@ -126,6 +126,21 @@ Business rules enforced in the service layer:
 - Concurrency tests against real PostgreSQL via Testcontainers to validate `SELECT FOR UPDATE`
 - Concurrency tests against real Redis via Testcontainers to validate rate limiting behavior
 
+### 📋 Audit Logging
+Structured logging across two layers:
+- **Middleware** → every request: method, path, status code, duration, user_id, IP
+- **Service layer** → business events: stock_lock_waiting, stock_lock_acquired, 
+  stock_updated (before/after/delta), stock_insufficient
+
+This separation allows reconstructing exactly what happened during concurrent 
+operations — including lock contention and queue order under load.
+
+Under 1000 concurrent requests, logs confirmed:
+- SELECT FOR UPDATE serialized all operations correctly
+- No request read a stale stock value
+- System saturated at PostgreSQL max_connections=100 — expected behavior, 
+  protected in production by rate limiting (10 req/min on stock endpoint)
+
 ---
 
 ## ⚖️ Trade-offs
@@ -147,6 +162,12 @@ which is an intentional trade-off for faster CI execution.
 ❌ Mock doesn't validate real rate limiting behavior
 
 👉 Concurrency tests run against real Redis via Testcontainers to validate blocking behavior.
+
+### Connection Pool Under Extreme Load
+Under 1000 concurrent requests (rate limiter disabled), PostgreSQL 
+max_connections=100 was saturated → 500 errors.
+In production this cannot occur — rate limiting caps stock endpoint 
+at 10 req/min, keeping load well within pool capacity.
 
 ---
 
