@@ -13,13 +13,6 @@ from api.utils.db_utils import commit_and_refresh
 
 logger = logging.getLogger(__name__)
 
-
-# 🔹 Get Dolar
-async def get_dolar_rate() -> float:
-    async with httpx.AsyncClient() as client: 
-        response = await client.get("https://dolarapi.com/v1/dolares/oficial")
-        return response.json()["venta"]
-
 # 🔹 Create Product
 def create_product(db: Session, product_data: ProductCreate, owner_id: int):
     db_product = Product(**product_data.model_dump(), owner_id=owner_id)
