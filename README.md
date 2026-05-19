@@ -55,7 +55,7 @@ Both write → stock = -1 ❌
 
 - Domain-level validation before persistence
 
-- Rate limiting on auth endpoints via Redis, preventing brute force attacks
+- Rate limiting on all endpoints via middleware and nginx reverse proxy, preventing brute force and DoS attacks
 
 👉 Result: **Stock remains consistent under concurrent requests**
 
@@ -106,6 +106,18 @@ Business rules enforced in the service layer:
   - `POST /products` and `PATCH` → 20 req/min
   - `DELETE` → 5 req/min
   - `GET` → 100 req/min
+
+### 🛡 OWASP Top 10 Coverage
+- **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
+- **A02 Cryptographic Failures** → Argon2 password hashing
+- **A03 Injection** → SQLAlchemy ORM, no raw queries
+- **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
+- **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
+- **A09 Logging Failures** → structured logging on all endpoints
+
+**Known gaps (intentional trade-offs):**
+- A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
+- A06 Vulnerable Components → dependency scanning via Safety added to CI
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
