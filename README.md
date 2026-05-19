@@ -132,14 +132,11 @@ Structured logging across two layers:
 - **Service layer** → business events: stock_lock_waiting, stock_lock_acquired, 
   stock_updated (before/after/delta), stock_insufficient
 
-This separation allows reconstructing exactly what happened during concurrent 
-operations — including lock contention and queue order under load.
-
-Under 1000 concurrent requests, logs confirmed:
+Under 1000 concurrent requests (rate limiter disabled for testing), logs confirmed:
 - SELECT FOR UPDATE serialized all operations correctly
 - No request read a stale stock value
-- System saturated at PostgreSQL max_connections=100 — expected behavior, 
-  protected in production by rate limiting (10 req/min on stock endpoint)
+- System saturated at PostgreSQL max_connections=100 — infrastructure limit, 
+  not a code bug. Protected in production by rate limiting (10 req/min on stock endpoint)
 
 ---
 
@@ -164,10 +161,9 @@ which is an intentional trade-off for faster CI execution.
 👉 Concurrency tests run against real Redis via Testcontainers to validate blocking behavior.
 
 ### Connection Pool Under Extreme Load
-Under 1000 concurrent requests (rate limiter disabled), PostgreSQL 
-max_connections=100 was saturated → 500 errors.
-In production this cannot occur — rate limiting caps stock endpoint 
-at 10 req/min, keeping load well within pool capacity.
+Under 1000 concurrent requests, PostgreSQL max_connections=100 was saturated → 500 errors.
+In production this cannot occur — rate limiting caps stock endpoint at 10 req/min.
+Production-scale solution: PgBouncer or connection pooling proxy.
 
 ---
 
