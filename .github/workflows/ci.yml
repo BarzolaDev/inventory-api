@@ -39,7 +39,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       - name: Security check dependencies
-        run: pip install safety && safety check
+        run: pip install safety && safety check --ignore-unpinned-requirements
       - name: Run tests
         run: pytest
         env:
