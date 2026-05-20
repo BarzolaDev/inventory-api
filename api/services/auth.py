@@ -45,13 +45,11 @@ async def refresh_access_token(refresh_token_str: str, db: Session) -> TokenResp
         raise InvalidCredentialsError("Invalid refresh token")
 
     redis = await get_redis()
-    user_id = await redis.get(f"refresh_token:{refresh_token_str}")
+
+    user_id = await redis.getdel(f"refresh_token:{refresh_token_str}")
 
     if not user_id:
         raise InvalidCredentialsError("Refresh token revoked or not found")
-
-    # Rotar — borrar el viejo, emitir uno nuevo
-    await redis.delete(f"refresh_token:{refresh_token_str}")
 
     new_refresh = create_refresh_token(data={"sub": payload["sub"]})
     new_access = create_access_token(data={"sub": payload["sub"]})
