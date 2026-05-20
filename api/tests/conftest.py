@@ -52,6 +52,7 @@ def mock_redis(request):
     mock.set.side_effect = lambda k, v, ex=None: store.update({k: v})
     mock.get.side_effect = lambda k: store.get(k)
     mock.delete.side_effect = lambda k: store.pop(k, None)
+    mock.getdel.side_effect = lambda k: store.pop(k, None)  
 
     with patch("api.core.rate_limiter.get_redis", return_value=mock), \
          patch("api.services.auth.get_redis", return_value=mock):
