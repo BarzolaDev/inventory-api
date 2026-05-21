@@ -3,7 +3,8 @@ from typing import Dict, Any
 import uuid
 
 from api.core.settings import settings
-from jose import JWTError, jwt, ExpiredSignatureError
+from jwt import PyJWTError, ExpiredSignatureError
+import jwt
 from passlib.context import CryptContext
 
 ALGORITHM = "HS256"
@@ -42,7 +43,7 @@ def verify_token(token: str) -> dict | None:
         return payload
     except ExpiredSignatureError:
         return None
-    except JWTError:
+    except PyJWTError:
         return None
 
 def create_refresh_token(data: Dict[str, Any]) -> str:
@@ -58,5 +59,5 @@ def verify_refresh_token(token: str) -> dict | None:
         if payload.get("type") != "refresh":
             return None
         return payload
-    except (ExpiredSignatureError, JWTError):
+    except (ExpiredSignatureError, PyJWTError):
         return None
