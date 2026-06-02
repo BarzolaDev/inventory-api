@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from api.middleware.rate_limit_middleware import RateLimitMiddleware
-from api.middleware.logging_middleware import LoggingMiddleware
+from api.middleware.rate_limit import RateLimitMiddleware
+from api.middleware.logging import LoggingMiddleware
+from api.middleware.agent_detect import AgentDetectMiddleware
 from api.routes import product, user
 from api.core.redis_client import init_redis, close_redis
 import api.core.logging  
@@ -21,6 +22,7 @@ async def remove_server_header(request: Request, call_next):
     response.headers["server"] = "unknown"
     return response
 
+app.add_middleware(AgentDetectMiddleware)
 app.add_middleware(LoggingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(

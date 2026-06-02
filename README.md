@@ -94,18 +94,15 @@ Business rules enforced in the service layer:
 - Mapped to HTTP responses in routes  
 
 ### 🔐 Security
-- Argon2 password hashing (resistant to GPU/ASIC attacks)  
-- JWT-based authentication  
+- Argon2 password hashing (resistant to GPU/ASIC attacks)
+- JWT-based authentication
 - Refresh tokens with rotation and server-side revocation (Redis)
 - Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense before requests reach the app
-- Rate limiting via middleware (Redis) — applied to all endpoints:
-  - `/users/login` → 5 req/min
-  - `/users/register` → 10 req/hour
-  - `/users/refresh` → 5 req/min
-  - `POST /products/{id}/stock` → 10 req/min
-  - `POST /products` and `PATCH` → 20 req/min
-  - `DELETE` → 5 req/min
-  - `GET` → 100 req/min
+- Rate limiting via middleware (Redis) — applied to all endpoints
+- **Agent detection middleware** — behavioral analysis before requests reach business logic:
+  - Honeypot endpoints — flags and blocks automation instantly
+  - IP blocking via Redis (1 hour TTL) — any flagged IP blocked on subsequent requests
+  - Timing analysis — detects non-human request intervals via standard deviation (< 50ms variability = agent)
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
@@ -113,7 +110,7 @@ Business rules enforced in the service layer:
 - **A03 Injection** → SQLAlchemy ORM, no raw queries
 - **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
-- **A09 Logging Failures** → structured logging on all endpoints
+- **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
 Known gaps (intentional trade-offs):
 - A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
