@@ -102,6 +102,7 @@ def test_update_product(auth_client):
 
 def test_update_stock(auth_client):
     created = auth_client.post("/products/", json=PRODUCT_PAYLOAD).json()
+    auth_client.get(f"/products/{created['id']}")
     response = auth_client.post(f"/products/{created['id']}/stock", json={"quantity": 50})
     assert response.status_code == 200
     assert response.json()["stock"] == 150
@@ -109,6 +110,7 @@ def test_update_stock(auth_client):
 
 def test_update_stock_insufficient(auth_client):
     created = auth_client.post("/products/", json=PRODUCT_PAYLOAD).json()
+    auth_client.get(f"/products/{created['id']}")
     response = auth_client.post(f"/products/{created['id']}/stock", json={"quantity": -9999})
     assert response.status_code == 400
 

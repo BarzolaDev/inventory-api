@@ -24,7 +24,8 @@ def real_redis_client(pg_client):
         )
 
         with patch("api.core.rate_limiter.get_redis", return_value=async_client), \
-             patch("api.services.auth.get_redis", return_value=async_client):
+             patch("api.services.auth.get_redis", return_value=async_client), \
+             patch("api.middleware.agent_detect.get_redis", return_value=async_client):
             redis_module.redis_client = async_client
             yield pg_client
 

@@ -53,10 +53,17 @@ def mock_redis(request):
     mock.get.side_effect = lambda k: store.get(k)
     mock.delete.side_effect = lambda k: store.pop(k, None)
     mock.getdel.side_effect = lambda k: store.pop(k, None)  
+    lists = {}
+    mock.lpush.side_effect = lambda k, v: lists.setdefault(k, []).insert(0, v)
+    mock.ltrim.side_effect = lambda k, s, e: lists.update({k: lists.get(k, [])[s:e+1]})
+    mock.lrange.side_effect = lambda k, s, e: lists.get(k, [])
+    mock.setex.side_effect = lambda k, ttl, v: store.update({k: v})
+    mock.incr.side_effect = lambda k: store.update({k: store.get(k, 0) + 1}) or store[k]
 
-    with patch("api.core.rate_limiter.get_redis", return_value=mock), \
+    with patch("api.services.alert.alert_discord", new_callable=AsyncMock), \
+         patch("api.core.rate_limiter.get_redis", return_value=mock), \
          patch("api.services.auth.get_redis", return_value=mock), \
-             patch("api.middleware.agent_detect.get_redis", return_value=mock):
+         patch("api.middleware.agent_detect.get_redis", return_value=mock):
         yield
 
 @pytest.fixture(scope="function")
@@ -105,7 +112,8 @@ def pg_client():
         mock.expire.return_value = True
 
         app.dependency_overrides[get_db] = override_get_db
-        with patch("api.core.rate_limiter.get_redis", return_value=mock), \
+        with patch("api.services.alert.alert_discord", new_callable=AsyncMock), \
+    patch("api.core.rate_limiter.get_redis", return_value=mock), \
              patch("api.services.auth.get_redis", return_value=mock), \
              patch("api.middleware.agent_detect.get_redis", return_value=mock):
             with TestClient(app) as c:

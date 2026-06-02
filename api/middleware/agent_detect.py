@@ -74,7 +74,14 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
                     return JSONResponse(status_code=403, content={"detail": "Forbidden"})
 
         # --- Agente defensor ---
-        user_id = request.headers.get("X-User-ID") or "anonymous"
+        user_id = "anonymous"
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            from api.core.security import verify_token
+            token = auth_header.split(" ", 1)[1]
+            payload = verify_token(token)
+            if payload:
+                user_id = payload.get("sub", "anonymous")
         action = {"method": request.method, "path": request.url.path}
 
         history_key = f"history:{user_id}"
@@ -85,6 +92,8 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
         raw_history = await redis.lrange(history_key, 0, -1)
         history = [json.loads(h) for h in raw_history]
 
+        print('HISTORY:', history)
+        print('ACTION:', action)
         result = await analyze_behavior(user_id, action, history, ip)
 
         if result["decision"] == "SOSPECHOSO":
