@@ -118,6 +118,7 @@ Business rules enforced in the service layer:
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
 Known gaps (intentional trade-offs):
+- **A04 Insecure Design** → UUID-based IDs, non-enumerable by design
 - A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
 - A06 Vulnerable Components → dependency scanning via pip-audit in CI
 
