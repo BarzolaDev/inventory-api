@@ -55,7 +55,8 @@ def mock_redis(request):
     mock.getdel.side_effect = lambda k: store.pop(k, None)  
 
     with patch("api.core.rate_limiter.get_redis", return_value=mock), \
-         patch("api.services.auth.get_redis", return_value=mock):
+         patch("api.services.auth.get_redis", return_value=mock), \
+             patch("api.middleware.agent_detect.get_redis", return_value=mock):
         yield
 
 @pytest.fixture(scope="function")
@@ -87,7 +88,7 @@ def auth_client(client):
 @pytest.fixture(scope="session")
 def pg_client():
     with PostgresContainer("postgres:16-alpine") as postgres:
-        pg_engine = create_engine(postgres.get_connection_url())
+        pg_engine = create_engine(postgres.get_connection_url(), pool_size=20, max_overflow=0)
         PgSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=pg_engine)
 
         Base.metadata.create_all(bind=pg_engine)
@@ -105,7 +106,8 @@ def pg_client():
 
         app.dependency_overrides[get_db] = override_get_db
         with patch("api.core.rate_limiter.get_redis", return_value=mock), \
-             patch("api.services.auth.get_redis", return_value=mock):
+             patch("api.services.auth.get_redis", return_value=mock), \
+             patch("api.middleware.agent_detect.get_redis", return_value=mock):
             with TestClient(app) as c:
                 yield c
         app.dependency_overrides.clear()

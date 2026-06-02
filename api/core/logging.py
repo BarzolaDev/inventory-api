@@ -3,7 +3,7 @@ import logging
 # formato para audit (tiene extra fields)
 audit_handler = logging.StreamHandler()
 audit_handler.setFormatter(logging.Formatter(
-    "%(asctime)s %(levelname)s %(name)s - %(method)s %(path)s %(status_code)s %(duration_ms)sms user=%(user_id)s ip=%(ip)s"
+    "%(asctime)s %(levelname)s %(name)s - %(message)s"
 ))
 
 # formato general para routes/services
