@@ -126,6 +126,8 @@ que evalúa cada acción en tiempo real mediante un sistema de scoring:
 - Detección de manipulación de stock sin flujo normal
 - Detección de actividad nocturna automatizada
 
+Decisiones: `NORMAL` / `SOSPECHOSO` / `BLOQUEADO`
+
 ### 🧪 Testing Strategy
 - Unit tests for business logic
 - Integration tests for full HTTP flow (Redis mocked for isolation)
