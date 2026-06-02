@@ -103,6 +103,11 @@ Business rules enforced in the service layer:
   - Honeypot endpoints — flags and blocks automation instantly
   - IP blocking via Redis (1 hour TTL) — any flagged IP blocked on subsequent requests
   - Timing analysis — detects non-human request intervals via standard deviation (< 50ms variability = agent)
+- **Behavioral analysis agent** (`agent_defender`) — evaluates each action in real time via scoring:
+  - Mass product scraping detection
+  - Stock manipulation without prior product lookup
+  - Automated off-hours activity detection
+  - Decisions: `NORMAL` / `SUSPICIOUS` / `BLOCKED`
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
@@ -116,17 +121,6 @@ Known gaps (intentional trade-offs):
 - A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
 - A06 Vulnerable Components → dependency scanning via Safety added to CI
 - **UUID migration pending** → IDs currently numeric (integer), enumerable via brute force. Migration to UUID planned as next improvement.
-
-## Seguridad & Detección de Fraude
-
-El sistema incluye un agente de análisis de comportamiento (`agent_defender`) 
-que evalúa cada acción en tiempo real mediante un sistema de scoring:
-
-- Detección de scraping masivo de productos
-- Detección de manipulación de stock sin flujo normal
-- Detección de actividad nocturna automatizada
-
-Decisiones: `NORMAL` / `SOSPECHOSO` / `BLOQUEADO`
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
