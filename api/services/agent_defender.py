@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from api.services.alert import alert_discord
 
 logger = logging.getLogger("audit")
@@ -8,40 +8,67 @@ SUSPICIOUS_PRODUCT_THRESHOLD = 50
 SUSPICIOUS_HOUR_START = 2
 SUSPICIOUS_HOUR_END = 5
 
+RULES = [
+    {
+        "check": lambda h, a: len([
+            x for x in h
+            if x.get("path", "").startswith("/products") and x.get("method") == "GET"
+        ]) > SUSPICIOUS_PRODUCT_THRESHOLD,
+        "score": 40,
+        "razon": "scraping de productos"
+    },
+    {
+        "check": lambda h, a: (
+            a.get("method") == "POST"
+            and "stock" in a.get("path", "")
+            and len(a.get("path", "").split("/")) > 2
+            and not any(
+                x.get("path", "") == f"/products/{a.get('path','').split('/')[2]}"
+                for x in h
+            )
+        ),
+        "score": 60,
+        "razon": "modificó stock sin consultar producto"
+    },
+    {
+        "check": lambda h, a: (
+            SUSPICIOUS_HOUR_START <= datetime.now(timezone.utc).hour <= SUSPICIOUS_HOUR_END
+            and len(h) > 20
+        ),
+        "score": 30,
+        "razon": "actividad nocturna intensa"
+    },
+]
+
 async def analyze_behavior(user_id: str, action: dict, history: list, ip: str = None) -> dict:
+    total_score = 0
+    razones = []
 
-    product_accesses = [
-        h for h in history
-        if h.get("path", "").startswith("/products") and h.get("method") == "GET"
-    ]
-    if len(product_accesses) > SUSPICIOUS_PRODUCT_THRESHOLD:
-        result = {"decision": "SOSPECHOSO", "razon": f"consultó {len(product_accesses)} productos en una sesión"}
-        await alert_discord("AGENTE SOSPECHOSO", user_id, ip or "unknown", result["razon"])
-        return result
+    for rule in RULES:
+        try:
+            if rule["check"](history, action):
+                total_score += rule["score"]
+                razones.append(rule["razon"])
+        except Exception as e:
+            logger.error("rule_error", extra={"error": str(e), "user_id": user_id})
 
-    if action.get("method") == "POST" and "stock" in action.get("path", ""):
-        product_id = action.get("path", "").split("/")[2]
-        consulted = any(h.get("path", "") == f"/products/{product_id}" for h in history)
-        if not consulted:
-            result = {"decision": "SOSPECHOSO", "razon": "modificó stock sin consultar el producto antes"}
-            await alert_discord("AGENTE SOSPECHOSO", user_id, ip or "unknown", result["razon"])
-            return result
+    if total_score >= 60:
+        decision = "BLOQUEADO" if total_score >= 90 else "SOSPECHOSO"
+        razon = " + ".join(razones)
+        await alert_discord(decision, user_id, ip or "unknown", razon)
+        logger.warning("agent_defender", extra={
+            "user_id": user_id,
+            "score": total_score,
+            "razon": razon,
+            "ip": ip,
+            "action": str(action),
+        })
+        return {"decision": decision, "score": total_score, "razon": razon}
 
-    hour = datetime.utcnow().hour
-    if SUSPICIOUS_HOUR_START <= hour <= SUSPICIOUS_HOUR_END:
-        if len(history) > 20:
-            result = {"decision": "SOSPECHOSO", "razon": f"actividad intensa a las {hour}am UTC"}
-            await alert_discord("AGENTE SOSPECHOSO", user_id, ip or "unknown", result["razon"])
-            return result
-
-    logger.info("agent_defender_analysis", extra={
+    logger.info("agent_defender", extra={
         "user_id": user_id,
-        "action": str(action),
-        "history_length": len(history),
-        "method": action.get("method", ""),
-        "status_code": 200,
-        "duration_ms": 0,
+        "score": total_score,
         "ip": ip,
+        "action": str(action),
     })
-
-    return {"decision": "NORMAL", "razon": "comportamiento consistente con uso normal de inventario"}
+    return {"decision": "NORMAL", "score": total_score, "razon": "comportamiento normal"}

@@ -117,6 +117,15 @@ Known gaps (intentional trade-offs):
 - A06 Vulnerable Components → dependency scanning via Safety added to CI
 - **UUID migration pending** → IDs currently numeric (integer), enumerable via brute force. Migration to UUID planned as next improvement.
 
+## Seguridad & Detección de Fraude
+
+El sistema incluye un agente de análisis de comportamiento (`agent_defender`) 
+que evalúa cada acción en tiempo real mediante un sistema de scoring:
+
+- Detección de scraping masivo de productos
+- Detección de manipulación de stock sin flujo normal
+- Detección de actividad nocturna automatizada
+
 ### 🧪 Testing Strategy
 - Unit tests for business logic
 - Integration tests for full HTTP flow (Redis mocked for isolation)
