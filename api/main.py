@@ -22,9 +22,9 @@ async def remove_server_header(request: Request, call_next):
     response.headers["server"] = "unknown"
     return response
 
-app.add_middleware(AgentDetectMiddleware)
+#app.add_middleware(AgentDetectMiddleware)
 app.add_middleware(LoggingMiddleware)
-app.add_middleware(RateLimitMiddleware)
+#app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
