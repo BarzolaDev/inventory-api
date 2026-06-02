@@ -27,7 +27,7 @@ def get_products(
 # 🔹 GET BY ID
 @router.get("/{product_id}", response_model=Product)
 def get_product(
-    product_id: int,
+    product_id: str,
     db: Session = Depends(get_db),
 ):
     try:
@@ -53,7 +53,7 @@ def create_product(
 # 🔹 UPDATE PRODUCT
 @router.patch("/{product_id}", response_model=Product)
 def update_product(
-    product_id: int,
+    product_id: str,
     product_in: ProductUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -74,7 +74,7 @@ def update_product(
 # 🔹 UPDATE STOCK
 @router.post("/{product_id}/stock", response_model=Product)
 def update_product_stock(
-    product_id: int,
+    product_id: str,
     movement: MovementCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -95,7 +95,7 @@ def update_product_stock(
 # 🔹 DELETE
 @router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_product(
-    product_id: int,
+    product_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
@@ -112,7 +112,7 @@ def delete_product(
 # 🔹 MOVEMENTS
 @router.get("/{product_id}/movements", response_model=list[MovementResponse])
 def get_movements(
-    product_id: int,
+    product_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):

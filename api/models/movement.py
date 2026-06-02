@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, DateTime, ForeignKey
+import uuid
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 
@@ -8,10 +9,10 @@ from api.db.database import Base
 class StockMovement(Base):
     __tablename__ = "stock_movements"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
 
     product_id = Column(
-        Integer,
+        String(36),
         ForeignKey("products.id", ondelete="CASCADE"),
         nullable=False,
         index=True

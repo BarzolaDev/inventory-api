@@ -8,5 +8,5 @@ class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=128)
 
 class UserResponse(UserBase):
-    id: int
+    id: str
     model_config = ConfigDict(from_attributes=True)

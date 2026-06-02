@@ -87,6 +87,7 @@ def auth_client(client):
         "username": "test@test.com",
         "password": "secret123"
     })
+    print("LOGIN RESPONSE:", response.json())
     token = response.json()["access_token"]
     client.headers.update({"Authorization": f"Bearer {token}"})
     return client
@@ -133,6 +134,7 @@ def pg_auth_client(pg_client):
         "username": "test@test.com",
         "password": "secret123"
     })
+    print("LOGIN RESPONSE:", response.json())
     token = response.json()["access_token"]
     pg_client.headers.update({"Authorization": f"Bearer {token}"})
     return pg_client

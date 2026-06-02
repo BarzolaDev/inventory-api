@@ -25,6 +25,6 @@ class ProductUpdate(BaseModel):
     sale_price: Decimal | None = Field(default=None, ge=0, decimal_places=2)
 
 class Product(ProductBase):
-    id: int
-    owner_id: int
+    id: str
+    owner_id: str
     model_config = ConfigDict(from_attributes=True)

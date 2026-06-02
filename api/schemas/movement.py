@@ -15,8 +15,8 @@ class MovementCreate(MovementBase):
     pass
 
 class MovementResponse(MovementBase):
-    id: int
-    product_id: int  
+    id: str
+    product_id: str  
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
