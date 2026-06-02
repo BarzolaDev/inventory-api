@@ -120,7 +120,7 @@ Business rules enforced in the service layer:
 Known gaps (intentional trade-offs):
 - A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
 - A06 Vulnerable Components → dependency scanning via Safety added to CI
-- **UUID migration pending** → IDs currently numeric (integer), enumerable via brute force. Migration to UUID planned as next improvement.
+
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
