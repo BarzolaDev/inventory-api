@@ -1,3 +1,4 @@
+cat > README.md << 'EOF'
 # ⚙️ Inventory Management API
 
 Production-oriented REST API built with FastAPI, focused on one thing:
@@ -10,7 +11,7 @@ Because real systems don't fail on CRUD — they fail under race conditions.
 
 ## 🌍 Live Demo
 
-Interactive API documentation:  
+Interactive API documentation:
 https://inventory-api-jpwh.onrender.com/docs
 
 ---
@@ -19,9 +20,9 @@ https://inventory-api-jpwh.onrender.com/docs
 
 Most beginner APIs work fine… until real-world conditions hit:
 
-- Multiple users modifying the same resource  
-- Race conditions corrupting data  
-- Business rules enforced inconsistently  
+- Multiple users modifying the same resource
+- Race conditions corrupting data
+- Business rules enforced inconsistently
 
 This project focuses on solving those problems.
 
@@ -35,9 +36,9 @@ How do you guarantee stock consistency when multiple requests hit the same produ
 
 ### Naive flow:
 
-1. Read stock  
-2. Modify value  
-3. Save  
+1. Read stock
+2. Modify value
+3. Save
 
 ### Under concurrency:
 User A reads stock = 1
@@ -48,10 +49,10 @@ Both write → stock = -1 ❌
 
 ## ✅ Solution
 
-- Row-level locking using `SELECT FOR UPDATE` inside database transactions,  
-  ensuring concurrent requests cannot read stale values before mutation  
+- Row-level locking using `SELECT FOR UPDATE` inside database transactions,
+  ensuring concurrent requests cannot read stale values before mutation
 
-- Atomic stock operations  
+- Atomic stock operations
 
 - Domain-level validation before persistence
 
@@ -62,7 +63,6 @@ Both write → stock = -1 ❌
 ---
 
 ## 🏗 Architecture
-```
 api/
 ├── routes/     → HTTP handling, maps errors to status codes
 ├── services/   → Business logic & domain rules
@@ -73,11 +73,10 @@ api/
 ├── middleware/ → Rate limiting + structured audit logging
 ├── db/         → Session management
 └── tests/      → Unit, integration & concurrency tests
-```
 
 Business logic stays independent from the web framework.
 
-This structure allows business rules to be tested independently  
+This structure allows business rules to be tested independently
 from the HTTP layer and database implementation.
 
 ---
@@ -89,21 +88,29 @@ from the HTTP layer and database implementation.
 
 ### 🧠 Domain-Driven Validation
 Business rules enforced in the service layer:
-- No negative stock  
-- Typed exceptions (`InsufficientStockError`, `ProductNotFoundError`)  
-- Mapped to HTTP responses in routes  
+- No negative stock
+- Typed exceptions (`InsufficientStockError`, `ProductNotFoundError`)
+- Mapped to HTTP responses in routes
 
 ### 🔐 Security
+
+**Network architecture — single entry point:**
+- Only port 80 (Nginx) exposed to the exterior
+- Redis, PostgreSQL, PgBouncer, and API have no exposed ports
+- All internal communication via Docker network only
+
+**Defense in depth:**
+- Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense
+- **ModSecurity WAF + OWASP CRS** → 846 rules active, blocks SQL injection, XSS and known attacks (HTTP 403)
 - Argon2 password hashing (resistant to GPU/ASIC attacks)
-- JWT-based authentication
-- Refresh tokens with rotation and server-side revocation (Redis)
-- Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense before requests reach the app
+- JWT-based authentication with refresh token rotation and server-side revocation (Redis)
+- CORS restricted to specific origins (configured via environment variable)
 - Rate limiting via middleware (Redis) — applied to all endpoints
+- **PgBouncer** — connection pooling, no direct database access from exterior
 - **Agent detection middleware** — behavioral analysis before requests reach business logic:
   - Honeypot endpoints — flags and blocks automation instantly
-  - IP blocking via Redis (1 hour TTL) — any flagged IP blocked on subsequent requests
+  - IP blocking via Redis (1 hour TTL)
   - Timing analysis — detects non-human request intervals via standard deviation (< 50ms variability = agent)
-- **ModSecurity WAF + OWASP CRS** → 846 rules active, blocks SQL injection, XSS and known attacks before reaching the app (HTTP 403)
 - **Behavioral analysis agent** (`agent_defender`) — evaluates each action in real time via scoring:
   - Mass product scraping detection
   - Stock manipulation without prior product lookup
@@ -114,16 +121,14 @@ Business rules enforced in the service layer:
 - **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
 - **A02 Cryptographic Failures** → Argon2 password hashing
 - **A03 Injection** → SQLAlchemy ORM, no raw queries + ModSecurity WAF blocking injection patterns at network level
+- **A05 Security Misconfiguration** → CORS restricted to specific origins, no exposed ports except Nginx
 - **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
-
 Known gaps (intentional trade-offs):
 - **A04 Insecure Design** → UUID-based IDs, non-enumerable by design
-- A05 Security Misconfiguration → CORS set to `*`, should be restricted to specific domains in production
-- A06 Vulnerable Components → dependency scanning via pip-audit in CI
-
+- **A06 Vulnerable Components** → dependency scanning via pip-audit in CI
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
@@ -135,13 +140,13 @@ Known gaps (intentional trade-offs):
 ### 📋 Audit Logging
 Structured logging across two layers:
 - **Middleware** → every request: method, path, status code, duration, user_id, IP
-- **Service layer** → business events: stock_lock_waiting, stock_lock_acquired, 
+- **Service layer** → business events: stock_lock_waiting, stock_lock_acquired,
   stock_updated (before/after/delta), stock_insufficient
 
 Under 1000 concurrent requests (rate limiter disabled for testing), logs confirmed:
 - SELECT FOR UPDATE serialized all operations correctly
 - No request read a stale stock value
-- System saturated at PostgreSQL max_connections=100 — infrastructure limit, 
+- System saturated at PostgreSQL max_connections=100 — infrastructure limit,
   not a code bug. Protected in production by rate limiting (10 req/min on stock endpoint)
 
 ---
@@ -150,18 +155,18 @@ Under 1000 concurrent requests (rate limiter disabled for testing), logs confirm
 
 ### SQLite in Tests
 
-✔️ Fast, no DB server needed in CI  
+✔️ Fast, no DB server needed in CI
 ❌ No support for `SELECT FOR UPDATE`
 
-👉 Concurrency tests run against real PostgreSQL to validate locking behavior.  
+👉 Concurrency tests run against real PostgreSQL to validate locking behavior.
 Unit and integration tests use SQLite for speed.
 
-This introduces a gap between test and production behavior,  
+This introduces a gap between test and production behavior,
 which is an intentional trade-off for faster CI execution.
 
 ### Redis in Tests
 
-✔️ Integration tests mock Redis for speed and isolation  
+✔️ Integration tests mock Redis for speed and isolation
 ❌ Mock doesn't validate real rate limiting behavior
 
 👉 Concurrency tests run against real Redis via Testcontainers to validate blocking behavior.
@@ -175,10 +180,10 @@ Production-scale solution implemented: PgBouncer with transaction pooling (max 1
 
 ## 🚀 Tech Stack
 
-FastAPI · PostgreSQL · SQLAlchemy ·  
-Pydantic · Argon2 · JWT · Alembic ·  
-Docker · Redis · Pytest · Testcontainers ·  
-GitHub Actions
+FastAPI · PostgreSQL · SQLAlchemy ·
+Pydantic · Argon2 · JWT · Alembic ·
+Docker · Redis · Pytest · Testcontainers ·
+GitHub Actions · Nginx · ModSecurity · PgBouncer
 
 ---
 
@@ -186,27 +191,6 @@ GitHub Actions
 
 This project is not about building an API that works.
 
-It's about building one that keeps working  
+It's about building one that keeps working
 when multiple things happen at the same time.
-
-
-## Security Architecture
-
-### Network
-- Single entry point: Nginx (port 80)
-- All internal services isolated (Redis, PostgreSQL, PgBouncer, API have no exposed ports)
-- Internal communication via Docker network only
-
-### Layers
-- **Nginx + ModSecurity + OWASP CRS** — 846 rules active, blocks SQLi, XSS, common attacks
-- **Rate limiting** — per IP, per endpoint
-- **JWT + Argon2** — short-lived access tokens, refresh token rotation
-- **CORS** — restricted origins and methods
-- **Agent defender** — behavioral analysis, Discord alerts
-- **Honeypot** — detects active recon
-- **PgBouncer** — connection pooling, no direct DB access
-
-### Ports exposed to exterior
-| Port | Service |
-|------|---------|
-| 80 | Nginx (only entry point) |
+EOF
