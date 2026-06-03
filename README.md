@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # ⚙️ Inventory Management API
 
 Production-oriented REST API built with FastAPI, focused on one thing:
@@ -63,6 +62,7 @@ Both write → stock = -1 ❌
 ---
 
 ## 🏗 Architecture
+```
 api/
 ├── routes/     → HTTP handling, maps errors to status codes
 ├── services/   → Business logic & domain rules
@@ -73,6 +73,7 @@ api/
 ├── middleware/ → Rate limiting + structured audit logging
 ├── db/         → Session management
 └── tests/      → Unit, integration & concurrency tests
+```
 
 Business logic stays independent from the web framework.
 
