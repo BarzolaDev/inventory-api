@@ -103,6 +103,7 @@ Business rules enforced in the service layer:
   - Honeypot endpoints — flags and blocks automation instantly
   - IP blocking via Redis (1 hour TTL) — any flagged IP blocked on subsequent requests
   - Timing analysis — detects non-human request intervals via standard deviation (< 50ms variability = agent)
+- **ModSecurity WAF + OWASP CRS** → 846 rules active, blocks SQL injection, XSS and known attacks before reaching the app (HTTP 403)
 - **Behavioral analysis agent** (`agent_defender`) — evaluates each action in real time via scoring:
   - Mass product scraping detection
   - Stock manipulation without prior product lookup
@@ -112,10 +113,11 @@ Business rules enforced in the service layer:
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
 - **A02 Cryptographic Failures** → Argon2 password hashing
-- **A03 Injection** → SQLAlchemy ORM, no raw queries
+- **A03 Injection** → SQLAlchemy ORM, no raw queries + ModSecurity WAF blocking injection patterns at network level
 - **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
+
 
 Known gaps (intentional trade-offs):
 - **A04 Insecure Design** → UUID-based IDs, non-enumerable by design
