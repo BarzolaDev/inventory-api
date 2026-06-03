@@ -127,9 +127,11 @@ Business rules enforced in the service layer:
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
+
 Known gaps (intentional trade-offs):
-- **A04 Insecure Design** → UUID-based IDs, non-enumerable by design
-- **A06 Vulnerable Components** → dependency scanning via pip-audit in CI
+- **A06 Vulnerable Components** → dependency scanning via pip-audit in CI (no automated updates yet)
+- **TLS not configured** → traffic runs over HTTP, HTTPS required before production deployment
+- **Encryption at rest** → PostgreSQL data on disk is not encrypted
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
