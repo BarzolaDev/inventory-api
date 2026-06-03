@@ -14,7 +14,7 @@ async def lifespan(app: FastAPI):
     yield
     await close_redis()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 @app.middleware("http")
 async def remove_server_header(request: Request, call_next):
