@@ -6,7 +6,9 @@ from api.middleware.logging import LoggingMiddleware
 from api.middleware.agent_detect import AgentDetectMiddleware
 from api.routes import product, user
 from api.core.redis_client import init_redis, close_redis
+from api.core.settings import settings
 import api.core.logging  
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,10 +29,9 @@ app.add_middleware(LoggingMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_headers=["*"],
-    allow_methods=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
 )
-
 app.include_router(product.router, prefix="/products", tags=["Products"])
 app.include_router(user.router, prefix="/users", tags=["Users"])
