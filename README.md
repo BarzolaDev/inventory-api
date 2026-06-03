@@ -189,3 +189,24 @@ This project is not about building an API that works.
 It's about building one that keeps working  
 when multiple things happen at the same time.
 
+
+## Security Architecture
+
+### Network
+- Single entry point: Nginx (port 80)
+- All internal services isolated (Redis, PostgreSQL, PgBouncer, API have no exposed ports)
+- Internal communication via Docker network only
+
+### Layers
+- **Nginx + ModSecurity + OWASP CRS** — 846 rules active, blocks SQLi, XSS, common attacks
+- **Rate limiting** — per IP, per endpoint
+- **JWT + Argon2** — short-lived access tokens, refresh token rotation
+- **CORS** — restricted origins and methods
+- **Agent defender** — behavioral analysis, Discord alerts
+- **Honeypot** — detects active recon
+- **PgBouncer** — connection pooling, no direct DB access
+
+### Ports exposed to exterior
+| Port | Service |
+|------|---------|
+| 80 | Nginx (only entry point) |
