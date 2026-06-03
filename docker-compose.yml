@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: dbname
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
     environment:
@@ -22,8 +20,6 @@ services:
       - PGBOUNCER_DEFAULT_POOL_SIZE=20
     depends_on:
       - db
-    ports:
-      - "5432:5432"
   redis:
     image: redis:7-alpine
     ports:
