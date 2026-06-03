@@ -169,7 +169,7 @@ which is an intentional trade-off for faster CI execution.
 ### Connection Pool Under Extreme Load
 Under 1000 concurrent requests, PostgreSQL max_connections=100 was saturated → 500 errors.
 In production this cannot occur — rate limiting caps stock endpoint at 10 req/min.
-Production-scale solution: PgBouncer or connection pooling proxy.
+Production-scale solution implemented: PgBouncer with transaction pooling (max 1000 client connections → 20 real PostgreSQL connections).
 
 ---
 

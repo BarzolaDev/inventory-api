@@ -9,6 +9,21 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
+  pgbouncer:
+    image: pgbouncer/pgbouncer:latest
+    environment:
+      - POSTGRESQL_HOST=db
+      - POSTGRESQL_PORT=5432
+      - POSTGRESQL_USERNAME=user
+      - POSTGRESQL_PASSWORD=password
+      - POSTGRESQL_DATABASE=dbname
+      - PGBOUNCER_POOL_MODE=transaction
+      - PGBOUNCER_MAX_CLIENT_CONN=1000
+      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+    depends_on:
+      - db
+    ports:
+      - "5432:5432"
   redis:
     image: redis:7-alpine
     ports:
@@ -32,6 +47,7 @@ services:
     depends_on:
       - db
       - redis
+      - pgbouncer
     volumes:
       - .:/app
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --no-server-header
