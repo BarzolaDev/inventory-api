@@ -32,6 +32,8 @@ services:
       - PORT=8080
       - SSL_PORT=8443
       - MODSEC_RULE_ENGINE=On
+      - MODSEC_REQ_BODY_ACCESS=On
+      - BLOCKING_PARANOIA=2
     depends_on:
       - api
   api:
