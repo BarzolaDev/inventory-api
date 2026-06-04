@@ -117,7 +117,11 @@ Business rules enforced in the service layer:
   - Mass product scraping detection
   - Stock manipulation without prior product lookup
   - Automated off-hours activity detection
+  - Repetitive sequence detection — same endpoints looping = bot
+  - Repeated stock manipulation detection
   - Decisions: `NORMAL` / `SUSPICIOUS` / `BLOCKED`
+  - **Dual blacklist**: IP-based (1h TTL) + user_id-based (1h or 24hs based on score) — proxy-resistant
+  - **Long-term memory (24hs)**: cross-session tracking — detects attackers who recon first, attack later
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id enforced on all product endpoints (list, get, movements) — users only see their own data. Generic 404 on all not-found responses to avoid confirming resource existence
