@@ -17,7 +17,7 @@ HONEYPOT_PATHS = [
 
 BLOCK_TTL = 60 * 60
 TIMING_WINDOW = 10
-MIN_STD_DEV = 0
+MIN_STD_DEV = 50
 RECON_404_LIMIT = 3
 HISTORY_WINDOW = 20
 
@@ -96,7 +96,7 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
         print('ACTION:', action)
         result = await analyze_behavior(user_id, action, history, ip)
 
-        if result["decision"] == "SOSPECHOSO":
+        if result["decision"] in ("SOSPECHOSO", "BLOQUEADO"):
             if ip:
                 await redis.setex(f"blocked:{ip}", BLOCK_TTL, "agent_defender")
             logger.warning("agent_defender_blocked", extra={

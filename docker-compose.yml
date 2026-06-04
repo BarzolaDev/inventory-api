@@ -10,14 +10,14 @@ services:
   pgbouncer:
     image: pgbouncer/pgbouncer:latest
     environment:
-      - POSTGRESQL_HOST=db
-      - POSTGRESQL_PORT=5432
-      - POSTGRESQL_USERNAME=user
-      - POSTGRESQL_PASSWORD=password
-      - POSTGRESQL_DATABASE=dbname
-      - PGBOUNCER_POOL_MODE=transaction
-      - PGBOUNCER_MAX_CLIENT_CONN=1000
-      - PGBOUNCER_DEFAULT_POOL_SIZE=20
+      - DATABASES_HOST=db
+      - DATABASES_PORT=5432
+      - DATABASES_USER=user
+      - DATABASES_PASSWORD=password
+      - DATABASES_DBNAME=dbname
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=1000
+      - DEFAULT_POOL_SIZE=20
     depends_on:
       - db
   redis:
@@ -26,9 +26,11 @@ services:
     image: owasp/modsecurity-crs:nginx-alpine
     ports:
       - "80:8080"
+      - "443:8443"
     environment:
       - BACKEND=http://api:8000
       - PORT=8080
+      - SSL_PORT=8443
       - MODSEC_RULE_ENGINE=On
     depends_on:
       - api
