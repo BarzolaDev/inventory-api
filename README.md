@@ -104,6 +104,7 @@ Business rules enforced in the service layer:
 - **TLS/HTTPS** → managed by Render (Let's Encrypt, automatic renewal) — encrypted transport in production
 - Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense
 - **ModSecurity WAF + OWASP CRS** → 846 rules active, blocks SQL injection, XSS and known attacks (HTTP 403)
+- **ModSecurity CRS Paranoia Level 2** — blocks malicious user-agents (sqlmap, nikto, scrapy) and requests missing standard browser headers at network level
 - Argon2 password hashing (resistant to GPU/ASIC attacks)
 - JWT-based authentication with refresh token rotation and server-side revocation (Redis)
 - CORS restricted to specific origins (configured via environment variable)
