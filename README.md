@@ -121,7 +121,9 @@ Business rules enforced in the service layer:
   - Repeated stock manipulation detection
   - Decisions: `NORMAL` / `SUSPICIOUS` / `BLOCKED`
   - **Dual blacklist**: IP-based (1h TTL) + user_id-based (1h or 24hs based on score) — proxy-resistant
-  - **Long-term memory (24hs)**: cross-session tracking — detects attackers who recon first, attack later
+  - - **Long-term memory (24hs)**: cross-session tracking — detects attackers who recon first, attack later
+  - **Recon/attack correlation**: if ≥2 recon signals in long_history (24hs) + active attack now → score ×3.0 multiplier
+  - **Adaptive thresholds**: block thresholds adjust dynamically based on time of day (night = stricter), system-wide attack pressure (global block counter in Redis), and       recidivism — thresholds can drop up to 66% for high-risk contexts
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id enforced on all product endpoints (list, get, movements) — users only see their own data. Generic 404 on all not-found responses to avoid confirming resource existence
