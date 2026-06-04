@@ -23,7 +23,7 @@ HISTORY_WINDOW = 20
 
 class AgentDetectMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        ip = request.client.host if request.client else None
+        ip = request.headers.get("CF-Connecting-IP") or request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or (request.client.host if request.client else None)
         redis = await get_redis()
 
         # --- IP bloqueada ---
