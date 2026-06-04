@@ -120,12 +120,12 @@ Business rules enforced in the service layer:
   - Decisions: `NORMAL` / `SUSPICIOUS` / `BLOCKED`
 
 ### 🛡 OWASP Top 10 Coverage
-- **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
+- **A01 Broken Access Control** → owner_id enforced on all product endpoints (list, get, movements) — users only see their own data. Generic 404 on all not-found responses to avoid confirming resource existence
 - **A02 Cryptographic Failures** → Argon2 password hashing + TLS in transit (Render)
 - **A03 Injection** → SQLAlchemy ORM, no raw queries + ModSecurity WAF blocking injection patterns at network level
 - **A05 Security Misconfiguration** → CORS restricted to specific origins, no exposed ports except Nginx
 - **A06 Vulnerable Components** → dependency scanning via pip-audit in CI
-- **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
+- **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation. Timing attack mitigation: dummy Argon2 hash computed on non-existent users to normalize response time and prevent user enumeration
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
