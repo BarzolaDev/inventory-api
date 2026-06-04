@@ -19,6 +19,7 @@ router = APIRouter()
 @router.get("/", response_model=list[Product])
 def get_products(
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
     skip: int = 0,
     limit: int = 10
 ):
@@ -29,6 +30,7 @@ def get_products(
 def get_product(
     product_id: str,
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     try:
         return product_service.get_product_by_id(product_id, db)
