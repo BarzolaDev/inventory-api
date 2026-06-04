@@ -1,14 +1,15 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from api.middleware.rate_limit import RateLimitMiddleware
 from api.middleware.logging import LoggingMiddleware
 from api.middleware.agent_detect import AgentDetectMiddleware
 from api.routes import product, user
 from api.core.redis_client import init_redis, close_redis
 from api.core.settings import settings
-import api.core.logging  
-
+import api.core.logging
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,6 +18,13 @@ async def lifespan(app: FastAPI):
     await close_redis()
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": "Invalid request"}
+    )
 
 @app.middleware("http")
 async def remove_server_header(request: Request, call_next):
