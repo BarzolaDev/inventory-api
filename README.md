@@ -101,6 +101,7 @@ Business rules enforced in the service layer:
 - All internal communication via Docker network only
 
 **Defense in depth:**
+- **TLS/HTTPS** → managed by Render (Let's Encrypt, automatic renewal) — encrypted transport in production
 - Nginx reverse proxy with rate limiting (30 req/s per IP, burst 50) — first line of defense
 - **ModSecurity WAF + OWASP CRS** → 846 rules active, blocks SQL injection, XSS and known attacks (HTTP 403)
 - Argon2 password hashing (resistant to GPU/ASIC attacks)
@@ -120,18 +121,16 @@ Business rules enforced in the service layer:
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id on products, 403 for unauthorized access
-- **A02 Cryptographic Failures** → Argon2 password hashing
+- **A02 Cryptographic Failures** → Argon2 password hashing + TLS in transit (Render)
 - **A03 Injection** → SQLAlchemy ORM, no raw queries + ModSecurity WAF blocking injection patterns at network level
 - **A05 Security Misconfiguration** → CORS restricted to specific origins, no exposed ports except Nginx
+- **A06 Vulnerable Components** → dependency scanning via pip-audit in CI
 - **A07 Authentication Failures** → JWT, rate limiting on auth endpoints, refresh token rotation
 - **A08 Software and Data Integrity** → Pydantic input validation, transactional rollbacks
 - **A09 Logging Failures** → structured audit logging on all endpoints + agent detection events (honeypot_triggered, agent_detected_timing, blocked_ip_request)
 
-
 Known gaps (intentional trade-offs):
-- **A06 Vulnerable Components** → dependency scanning via pip-audit in CI (no automated updates yet)
-- **TLS not configured** → traffic runs over HTTP, HTTPS required before production deployment
-- **Encryption at rest** → PostgreSQL data on disk is not encrypted
+- **Encryption at rest** → PostgreSQL data on disk is not encrypted — requires filesystem-level or pgcrypto solution, deferred for this stage
 
 ### 🧪 Testing Strategy
 - Unit tests for business logic
