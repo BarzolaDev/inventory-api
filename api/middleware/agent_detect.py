@@ -89,12 +89,19 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
         await redis.ltrim(history_key, 0, HISTORY_WINDOW - 1)
         await redis.expire(history_key, 60 * 60)
 
+        # Historial largo — memoria entre sesiones (24hs)
+        long_history_key = f"history_long:{user_id}"
+        await redis.lpush(long_history_key, json.dumps({**action, "ts": int(time.time())}))
+        await redis.ltrim(long_history_key, 0, 99)
+        await redis.expire(long_history_key, 60 * 60 * 24)
+
         raw_history = await redis.lrange(history_key, 0, -1)
         history = [json.loads(h) for h in raw_history]
 
-        print('HISTORY:', history)
-        print('ACTION:', action)
-        result = await analyze_behavior(user_id, action, history, ip)
+        raw_long_history = await redis.lrange(f"history_long:{user_id}", 0, -1)
+        long_history = [json.loads(h) for h in raw_long_history]
+
+        result = await analyze_behavior(user_id, action, history, ip, long_history)
 
         if result["decision"] in ("SOSPECHOSO", "BLOQUEADO"):
             if ip:

@@ -38,9 +38,31 @@ RULES = [
         "score": 30,
         "razon": "actividad nocturna intensa"
     },
+    {
+        "check": lambda h, a: (
+            len(h) >= 4 and
+            len(set(
+                f"{x.get('method')}:{x.get('path')}" for x in h[:4]
+            )) <= 2
+        ),
+        "score": 50,
+        "razon": "secuencia repetitiva de acciones"
+    },
+    {
+        "check": lambda h, a: (
+            a.get("method") == "POST"
+            and "stock" in a.get("path", "")
+            and sum(
+                1 for x in h
+                if x.get("method") == "POST" and "stock" in x.get("path", "")
+            ) >= 5
+        ),
+        "score": 40,
+        "razon": "modificaciones de stock repetitivas"
+    },
 ]
 
-async def analyze_behavior(user_id: str, action: dict, history: list, ip: str = None) -> dict:
+async def analyze_behavior(user_id: str, action: dict, history: list, ip: str = None, long_history: list = []) -> dict:
     total_score = 0
     razones = []
 
