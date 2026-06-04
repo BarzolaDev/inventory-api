@@ -19,10 +19,11 @@ def create_product(db: Session, product_data: ProductCreate, owner_id: int):
     return commit_and_refresh(db, db_product, action="create_product")
 
 # 🔹 Get Products
-def get_products(db: Session, skip: int = 0, limit: int = 10):
+def get_products(db: Session, owner_id: int, skip: int = 0, limit: int = 10):
     try:
         return (
             db.query(Product)
+            .filter(Product.owner_id == owner_id)
             .offset(skip)
             .limit(limit)
             .all()
@@ -32,11 +33,11 @@ def get_products(db: Session, skip: int = 0, limit: int = 10):
         raise
 
 # 🔹 Product by id
-def get_product_by_id(product_id: int, db: Session):
+def get_product_by_id(product_id: int, db: Session, owner_id: int):
     try:
         db_product = (
             db.query(Product)
-            .filter(Product.id == product_id)
+            .filter(Product.id == product_id, Product.owner_id == owner_id)
             .first()
         )
     except SQLAlchemyError:
@@ -150,8 +151,11 @@ def delete_product(product_id: int, db: Session, owner_id: int):
 
 
 # 🔹 Movements
-def get_movements(product_id: int, db: Session):
+def get_movements(product_id: int, db: Session, owner_id: int):
     try:
+        db_product = db.query(Product).filter(Product.id == product_id, Product.owner_id == owner_id).first()
+        if not db_product:
+            raise ProductNotFoundError("Product not found")
         return (
             db.query(StockMovement)
             .filter(StockMovement.product_id == product_id)

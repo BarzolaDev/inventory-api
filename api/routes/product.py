@@ -23,7 +23,7 @@ def get_products(
     skip: int = 0,
     limit: int = 10
 ):
-    return product_service.get_products(db=db, skip=skip, limit=limit)
+    return product_service.get_products(db=db, owner_id=current_user.id, skip=skip, limit=limit)
 
 # 🔹 GET BY ID
 @router.get("/{product_id}", response_model=Product)
@@ -33,9 +33,9 @@ def get_product(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        return product_service.get_product_by_id(product_id, db)
-    except product_service.ProductNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        return product_service.get_product_by_id(product_id, db, owner_id=current_user.id)
+    except product_service.ProductNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
 
 # 🔹 CREATE
 @router.post("/", response_model=Product, status_code=status.HTTP_201_CREATED)
@@ -64,8 +64,8 @@ def update_product(
         result = product_service.update_product(product_id=product_id, product_data=product_in, db=db, owner_id=current_user.id)
         logger.info(f"Producto actualizado - product_id: {product_id} - user: {current_user.id}")
         return result
-    except product_service.ProductNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except product_service.ProductNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     except product_service.InvalidPriceError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except UnauthorizedError as e:
@@ -85,8 +85,8 @@ def update_product_stock(
         result = product_service.update_stock(product_id=product_id, movement_data=movement, db=db, owner_id=current_user.id)
         logger.info(f"Stock actualizado - product_id: {product_id} - user: {current_user.id}")
         return result
-    except product_service.ProductNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except product_service.ProductNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     except product_service.InsufficientStockError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except UnauthorizedError as e:
@@ -104,8 +104,8 @@ def delete_product(
     try:
         product_service.delete_product(product_id=product_id, db=db, owner_id=current_user.id)
         logger.warning(f"Producto eliminado - product_id: {product_id} - user: {current_user.id}")
-    except product_service.ProductNotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except product_service.ProductNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     except UnauthorizedError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception:
@@ -118,4 +118,4 @@ def get_movements(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return product_service.get_movements(product_id=product_id, db=db)
+    return product_service.get_movements(product_id=product_id, db=db, owner_id=current_user.id)

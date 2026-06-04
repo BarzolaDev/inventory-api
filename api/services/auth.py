@@ -25,7 +25,10 @@ async def authenticate_user(email: str, password_plain: str, db: Session) -> Tok
         logger.exception("Database error authenticating user")
         raise
 
-    if not db_user or not verify_password(password_plain, db_user.hashed_password):
+    if not db_user:
+        verify_password(password_plain, "$argon2id$v=19$m=65536,t=3,p=4$dk7J+b8XAsCYk5KS8p5zrg$8UpXKdgfJWIvHKPOfkXipKS3Ox40hKTjx/FvKJCYhK4")
+        raise InvalidCredentialsError("Invalid credentials")
+    if not verify_password(password_plain, db_user.hashed_password):
         raise InvalidCredentialsError("Invalid credentials")
 
     access_token = create_access_token(data={"sub": str(db_user.id)})
