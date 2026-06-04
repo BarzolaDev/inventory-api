@@ -82,6 +82,15 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
             payload = verify_token(token)
             if payload:
                 user_id = payload.get("sub", "anonymous")
+        # --- User bloqueado ---
+        if user_id != "anonymous" and await redis.get(f"blocked_user:{user_id}"):
+            logger.warning("blocked_user_request", extra={
+                "path": request.url.path, "ip": ip,
+                "method": request.method, "status_code": 403,
+                "duration_ms": 0, "user_id": user_id,
+            })
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
+
         action = {"method": request.method, "path": request.url.path}
 
         history_key = f"history:{user_id}"

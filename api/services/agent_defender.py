@@ -75,6 +75,20 @@ async def analyze_behavior(user_id: str, action: dict, history: list, ip: str = 
             logger.error("rule_error", extra={"error": str(e), "user_id": user_id})
 
     if total_score >= 60:
+        if user_id != "anonymous":
+            from api.core.redis_client import get_redis
+            r = await get_redis()
+            ttl = 60 * 60 * 24 if total_score >= 90 else 60 * 60
+            await r.setex(f"blocked_user:{user_id}", ttl, "agent_defender")
+
+        # Castigo por user_id — independiente de IP
+        if user_id != "anonymous":
+            import redis as redis_lib
+            from api.core.redis_client import get_redis
+            r = await get_redis()
+            ttl = 60 * 60 * 24 if total_score >= 90 else 60 * 60
+            await r.setex(f"blocked_user:{user_id}", ttl, "agent_defender")
+
         decision = "BLOQUEADO" if total_score >= 90 else "SOSPECHOSO"
         razon = " + ".join(razones)
         await alert_discord(decision, user_id, ip or "unknown", razon)
