@@ -75,8 +75,8 @@ def test_create_product_unauthorized(client):
     assert response.status_code == 401
 
 
-def test_get_products(client):
-    response = client.get("/products/")
+def test_get_products(auth_client):
+    response = auth_client.get("/products/")
     assert response.status_code == 200
     assert isinstance(response.json(), list)
 
@@ -88,8 +88,8 @@ def test_get_product_by_id(auth_client):
     assert response.json()["id"] == created["id"]
 
 
-def test_get_product_not_found(client):
-    response = client.get("/products/9999")
+def test_get_product_not_found(auth_client):
+    response = auth_client.get("/products/9999")
     assert response.status_code == 404
 
 
@@ -133,4 +133,5 @@ def test_create_product_invalid_price(auth_client):
         "sale_price": "5.00",  # menor que purchase_price
         "unit": "kg"
     })
-    assert response.status_code == 422
+     
+    assert response.status_code == 400

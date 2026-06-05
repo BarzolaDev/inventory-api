@@ -1,30 +1,27 @@
 import logging
+import time
+import json
 from datetime import datetime, timezone
 from api.services.alert import alert_discord
 
 logger = logging.getLogger("audit")
 
 # ─── Umbrales base ─────────────────────────────────────────────────────────────
-# Ya no se usan directamente en la decisión final — son los defaults
-# que adaptive_thresholds ajusta según contexto.
-
 SUSPICIOUS_PRODUCT_THRESHOLD = 50
 SUSPICIOUS_HOUR_START = 2
 SUSPICIOUS_HOUR_END = 5
 
-SCORE_WARN = 60       # antes hardcodeado inline
-SCORE_BLOCK = 90      # antes hardcodeado inline
+SCORE_WARN = 60
+SCORE_BLOCK = 90
 
 # ─── Multiplicador recon → ataque ──────────────────────────────────────────────
 RECON_ATTACK_MULTIPLIER = 3.0
 RECON_MIN_EVENTS = 2
 RECON_WINDOW_SECONDS = 86_400  # 24hs
 
-# Qué paths/métodos en long_history cuentan como señal de recon
 RECON_SIGNAL_PATHS = ["/products", "/api/internal", "/admin", "/debug"]
 RECON_SIGNAL_METHOD = "GET"
 
-# Qué reglas activas (razones) califican como "ataque activo"
 ATTACK_RAZONES = {
     "scraping de productos",
     "modificó stock sin consultar producto",
@@ -33,6 +30,14 @@ ATTACK_RAZONES = {
 }
 
 # ─── Reglas de comportamiento ──────────────────────────────────────────────────
+
+def _extract_product_id(path: str) -> str | None:
+    """Extrae el product_id de un path como /products/123/stock. Retorna None si no aplica."""
+    parts = path.split("/")
+    # Esperamos al menos: ['', 'products', '<id>', 'stock']
+    if len(parts) >= 3:
+        return parts[2]
+    return None
 
 RULES = [
     {
@@ -44,12 +49,13 @@ RULES = [
         "razon": "scraping de productos"
     },
     {
+        # FIX: reemplazamos el split()[2] inline por _extract_product_id con guard
         "check": lambda h, a: (
             a.get("method") == "POST"
             and "stock" in a.get("path", "")
-            and len(a.get("path", "").split("/")) > 2
+            and _extract_product_id(a.get("path", "")) is not None
             and not any(
-                x.get("path", "") == f"/products/{a.get('path','').split('/')[2]}"
+                x.get("path", "") == f"/products/{_extract_product_id(a.get('path', ''))}"
                 for x in h
             )
         ),
@@ -91,8 +97,6 @@ RULES = [
 
 # ─── 1. Contexto adaptativo ────────────────────────────────────────────────────
 
-import time
-
 def _is_night_time() -> bool:
     return SUSPICIOUS_HOUR_START <= datetime.now(timezone.utc).hour <= SUSPICIOUS_HOUR_END
 
@@ -104,19 +108,16 @@ async def _load_context(user_id: str, ip: str, redis) -> dict:
     multiplier = 1.0
     flags = []
 
-    # Horario nocturno → más estricto
     if _is_night_time():
         multiplier *= 0.8
         flags.append("night_hours")
 
-    # Presión global: cuántos bloqueos en las últimas 24hs
     global_blocks_raw = await redis.get("adaptive:global_blocks")
     global_blocks = int(global_blocks_raw) if global_blocks_raw else 0
     if global_blocks >= 50:
         multiplier *= 0.7
         flags.append(f"system_pressure(blocks={global_blocks})")
 
-    # Reincidente: user_id o IP ya fue bloqueado antes
     recidivist = False
     if user_id != "anonymous":
         block_data = await redis.get(f"blocked_user:{user_id}")
@@ -133,7 +134,6 @@ async def _load_context(user_id: str, ip: str, redis) -> dict:
     return {
         "multiplier": multiplier,
         "flags": flags,
-        # Umbrales ajustados — si multiplier < 1, los umbrales bajan
         "score_warn": max(30, SCORE_WARN * multiplier),
         "score_block": max(45, SCORE_BLOCK * multiplier),
     }
@@ -141,13 +141,7 @@ async def _load_context(user_id: str, ip: str, redis) -> dict:
 
 # ─── 2. Correlación recon → ataque ────────────────────────────────────────────
 
-import json
-
 def _count_recon_events(long_history: list) -> int:
-    """
-    Cuenta cuántos eventos en long_history son señales de recon
-    dentro de la ventana de 24hs.
-    """
     cutoff = time.time() - RECON_WINDOW_SECONDS
     count = 0
     for entry in long_history:
@@ -161,21 +155,14 @@ def _count_recon_events(long_history: list) -> int:
     return count
 
 def _correlate_recon_attack(long_history: list, active_razones: list[str], base_score: float) -> tuple[float, str | None]:
-    """
-    Si hay recon previo en long_history + ataque activo ahora → multiplica score.
-    Returns: (adjusted_score, reason_string | None)
-    """
-    # ¿Hay ataque activo en esta sesión?
     active_attacks = [r for r in active_razones if r in ATTACK_RAZONES]
     if not active_attacks:
         return base_score, None
 
-    # ¿Hay recon previo suficiente?
     recon_count = _count_recon_events(long_history)
     if recon_count < RECON_MIN_EVENTS:
         return base_score, None
 
-    # Correlación confirmada
     adjusted = base_score * RECON_ATTACK_MULTIPLIER
     reason = (
         f"recon_attack_correlation: recon_events={recon_count} "
@@ -188,7 +175,6 @@ def _correlate_recon_attack(long_history: list, active_razones: list[str], base_
 # ─── 3. Decisión y bloqueo ────────────────────────────────────────────────────
 
 async def _block_user(user_id: str, score: float, redis) -> None:
-    """Escribe blocked_user en Redis con TTL según severidad del score."""
     if user_id == "anonymous":
         return
     ttl = 60 * 60 * 24 if score >= SCORE_BLOCK else 60 * 60
@@ -201,21 +187,27 @@ async def _increment_global_blocks(redis) -> None:
 
 # ─── Punto de entrada principal ───────────────────────────────────────────────
 
+# FIX: import movido al tope del archivo (ver arriba)
+from api.core.redis_client import get_redis
+
 async def analyze_behavior(
     user_id: str,
     action: dict,
     history: list,
     ip: str = None,
-    long_history: list = [],
+    long_history: list = None,  # FIX: default mutable [] → None
 ) -> dict:
 
-    from api.core.redis_client import get_redis
+    # FIX: default mutable resuelto acá
+    if long_history is None:
+        long_history = []
+
     redis = await get_redis()
 
     # 1. Contexto adaptativo
     ctx = await _load_context(user_id, ip or "unknown", redis)
 
-    # 2. Reglas sobre historial corto (sin cambios respecto a lo que tenías)
+    # 2. Reglas sobre historial corto
     total_score = 0
     razones = []
     for rule in RULES:

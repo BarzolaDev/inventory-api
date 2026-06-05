@@ -48,6 +48,8 @@ def create_product(
         result = product_service.create_product(db=db, product_data=product, owner_id=current_user.id)
         logger.info(f"Producto creado - user: {current_user.id}")
         return result
+    except product_service.InvalidPriceError as e:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except Exception:
         logger.error(f"Error creando producto - user: {current_user.id}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error creating product")
@@ -67,7 +69,7 @@ def update_product(
     except product_service.ProductNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found")
     except product_service.InvalidPriceError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(e))
     except UnauthorizedError as e:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
     except Exception:

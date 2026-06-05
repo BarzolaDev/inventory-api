@@ -61,9 +61,10 @@ def mock_redis(request):
     mock.incr.side_effect = lambda k: store.update({k: store.get(k, 0) + 1}) or store[k]
 
     with patch("api.services.alert.alert_discord", new_callable=AsyncMock), \
-         patch("api.core.rate_limiter.get_redis", return_value=mock), \
-         patch("api.services.auth.get_redis", return_value=mock), \
-         patch("api.middleware.agent_detect.get_redis", return_value=mock):
+     patch("api.core.rate_limiter.get_redis", return_value=mock), \
+     patch("api.services.auth.get_redis", return_value=mock), \
+     patch("api.middleware.agent_detect.get_redis", return_value=mock), \
+     patch("api.services.agent_defender.get_redis", return_value=mock):  # ← agregá esto
         yield
 
 @pytest.fixture(scope="function")
