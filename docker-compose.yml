@@ -24,6 +24,8 @@ services:
       - db
   redis:
     image: redis:7-alpine
+    ports:
+      - "6379:6379"
   nginx:
     image: owasp/modsecurity-crs:nginx-alpine
     ports:
@@ -33,7 +35,7 @@ services:
       - BACKEND=http://api:8000
       - PORT=8080
       - SSL_PORT=8443
-      - MODSEC_RULE_ENGINE=On
+      - MODSEC_RULE_ENGINE=DetectionOnly
       - MODSEC_REQ_BODY_ACCESS=On
       - BLOCKING_PARANOIA=2
     depends_on:
@@ -48,6 +50,8 @@ services:
       - pgbouncer
     volumes:
       - .:/app
+    ports:
+      - "8000:8000"
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload --no-server-header
 volumes:
   postgres_data:

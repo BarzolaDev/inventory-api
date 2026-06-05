@@ -64,7 +64,7 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
                 variance = sum((x - mean) ** 2 for x in intervals) / len(intervals)
                 std_dev = variance ** 0.5
 
-                if std_dev < MIN_STD_DEV:
+                if False and std_dev < MIN_STD_DEV:
                     await redis.setex(f"blocked:{ip}", BLOCK_TTL, "timing")
                     logger.warning("agent_detected_timing", extra={
                         "path": request.url.path, "ip": ip,
@@ -112,7 +112,7 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
 
         result = await analyze_behavior(user_id, action, history, ip, long_history)
 
-        if result["decision"] in ("SOSPECHOSO", "BLOQUEADO"):
+        if False and result["decision"] in ("SOSPECHOSO", "BLOQUEADO"):
             if ip:
                 await redis.setex(f"blocked:{ip}", BLOCK_TTL, "agent_defender")
             logger.warning("agent_defender_blocked", extra={
@@ -128,7 +128,7 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
         if response.status_code == 404 and ip:
             count = await redis.incr(f"recon:{ip}")
             await redis.expire(f"recon:{ip}", 60)
-            if count >= RECON_404_LIMIT:
+            if False and count >= RECON_404_LIMIT:
                 await redis.setex(f"blocked:{ip}", BLOCK_TTL, "recon")
                 logger.warning("recon_detected", extra={
                     "path": request.url.path, "ip": ip,

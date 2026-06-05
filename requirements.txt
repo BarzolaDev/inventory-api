@@ -55,3 +55,6 @@ urllib3==2.7.0
 uvicorn==0.48.0
 wrapt==2.2.1
 yarg==0.1.10
+pandas
+scikit-learn
+imbalanced-learn
