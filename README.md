@@ -1,3 +1,14 @@
+cat >> README.md << 'EOF'
+
+## ML Security Layer
+
+- Random Forest entrenado con tráfico sintético (NORMAL/SOSPECHOSO/BLOQUEADO)
+- SMOTE para balanceo de clases
+- `ml_predictor.py` carga el modelo y asiste a `agent_defender.py` en tiempo real
+- Override automático si confianza >= 85%
+- Feedback loop: cada request queda en DB → próximo entrenamiento mejora el modelo
+EOF
+
 # ⚙️ Inventory Management API
 
 Production-oriented REST API built with FastAPI, focused on one thing:
