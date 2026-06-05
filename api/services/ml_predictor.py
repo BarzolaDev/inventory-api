@@ -127,9 +127,9 @@ def _build_feature_vector(
 ) -> pd.DataFrame:
     row = {
         "score":            float(score),
+        "recon_correlated": int(recon_correlated),
         "history_len":      int(history_len),
         "long_history_len": int(long_history_len),
-        "recon_correlated": int(recon_correlated),
         "method_enc":       _encode_method(action_method),
         "path_enc":         _encode_path(action_path),
         **_encode_adaptive_flags(adaptive_flags),
@@ -181,10 +181,9 @@ def predict_behavior(
         )
 
         # Predicción + probabilidades
-        pred_enc   = _MODEL.predict(X)[0]
+        label      = _MODEL.predict(X)[0]
         proba      = _MODEL.predict_proba(X)[0]
         confidence = float(np.max(proba))
-        label      = _LABEL_ENCODER.inverse_transform([pred_enc])[0]
 
         logger.debug(f"[ml_predictor] → {label} (confianza: {confidence:.2f})")
         return label, confidence
