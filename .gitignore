@@ -8,4 +8,5 @@
 test.db
 *.sqlite3
 .pytest_cache/
-.env.docker
+.env.docker*
+.pkl

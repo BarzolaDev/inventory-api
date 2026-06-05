@@ -16,7 +16,7 @@ SCORE_BLOCK = 90
 
 # ─── Multiplicador recon → ataque ──────────────────────────────────────────────
 RECON_ATTACK_MULTIPLIER = 3.0
-RECON_MIN_EVENTS = 2
+RECON_MIN_EVENTS = 5
 RECON_WINDOW_SECONDS = 86_400  # 24hs
 
 RECON_SIGNAL_PATHS = ["/products", "/api/internal", "/admin", "/debug"]
