@@ -32,9 +32,7 @@ ATTACK_RAZONES = {
 # ─── Reglas de comportamiento ──────────────────────────────────────────────────
 
 def _extract_product_id(path: str) -> str | None:
-    """Extrae el product_id de un path como /products/123/stock. Retorna None si no aplica."""
     parts = path.split("/")
-    # Esperamos al menos: ['', 'products', '<id>', 'stock']
     if len(parts) >= 3:
         return parts[2]
     return None
@@ -49,7 +47,6 @@ RULES = [
         "razon": "scraping de productos"
     },
     {
-        # FIX: reemplazamos el split()[2] inline por _extract_product_id con guard
         "check": lambda h, a: (
             a.get("method") == "POST"
             and "stock" in a.get("path", "")
@@ -101,10 +98,6 @@ def _is_night_time() -> bool:
     return SUSPICIOUS_HOUR_START <= datetime.now(timezone.utc).hour <= SUSPICIOUS_HOUR_END
 
 async def _load_context(user_id: str, ip: str, redis) -> dict:
-    """
-    Devuelve multiplicadores y umbrales ajustados según contexto actual.
-    Factores: horario nocturno, presión global del sistema, reincidente.
-    """
     multiplier = 1.0
     flags = []
 
@@ -187,18 +180,17 @@ async def _increment_global_blocks(redis) -> None:
 
 # ─── Punto de entrada principal ───────────────────────────────────────────────
 
-# FIX: import movido al tope del archivo (ver arriba)
 from api.core.redis_client import get_redis
+from api.services.ml_predictor import predict_behavior as ml_predict, is_ready as ml_ready
 
 async def analyze_behavior(
     user_id: str,
     action: dict,
     history: list,
     ip: str = None,
-    long_history: list = None,  # FIX: default mutable [] → None
+    long_history: list = None,
 ) -> dict:
 
-    # FIX: default mutable resuelto acá
     if long_history is None:
         long_history = []
 
@@ -224,13 +216,66 @@ async def analyze_behavior(
         razones.append(correlation_reason)
 
     # 4. Decisión con umbrales adaptativos
-    score_warn = ctx["score_warn"]
+    score_warn  = ctx["score_warn"]
     score_block = ctx["score_block"]
 
     if final_score >= score_warn:
         decision = "BLOQUEADO" if final_score >= score_block else "SOSPECHOSO"
-        razon_str = " + ".join(razones)
+    else:
+        decision = "NORMAL"
 
+    # ─── 5. ML como segunda opinión ───────────────────────────────────────────
+    ml_label     = None
+    ml_confidence = None
+    ml_override  = False
+
+    if ml_ready():
+        ml_result = ml_predict(
+            score=final_score,
+            history_len=len(history),
+            long_history_len=len(long_history),
+            recon_correlated=bool(correlation_reason),
+            action_method=action.get("method", "GET"),
+            action_path=action.get("path", "/"),
+            adaptive_flags=",".join(ctx["flags"]),
+            razones=",".join(razones),
+        )
+        if ml_result:
+            ml_label, ml_confidence = ml_result
+            logger.info("ml_predictor", extra={
+                "user_id": user_id,
+                "ml_label": ml_label,
+                "ml_confidence": ml_confidence,
+                "rule_decision": decision,
+            })
+
+            # Override solo si ML está muy seguro y las reglas fueron más permisivas
+            if ml_label == "BLOQUEADO" and ml_confidence >= 0.85 and decision != "BLOQUEADO":
+                logger.warning("ml_override", extra={
+                    "user_id": user_id,
+                    "rule_decision": decision,
+                    "ml_label": ml_label,
+                    "ml_confidence": ml_confidence,
+                })
+                decision   = "BLOQUEADO"
+                ml_override = True
+                razones.append(f"ml_override(confianza={ml_confidence:.2f})")
+
+            elif ml_label == "SOSPECHOSO" and ml_confidence >= 0.85 and decision == "NORMAL":
+                logger.warning("ml_override", extra={
+                    "user_id": user_id,
+                    "rule_decision": decision,
+                    "ml_label": ml_label,
+                    "ml_confidence": ml_confidence,
+                })
+                decision   = "SOSPECHOSO"
+                ml_override = True
+                razones.append(f"ml_override(confianza={ml_confidence:.2f})")
+
+    # ─── 6. Acciones post-decisión ────────────────────────────────────────────
+    razon_str = " + ".join(razones) if razones else "comportamiento normal"
+
+    if decision != "NORMAL":
         await _block_user(user_id, final_score, redis)
         await _increment_global_blocks(redis)
         await alert_discord(decision, user_id, ip or "unknown", razon_str)
@@ -243,56 +288,46 @@ async def analyze_behavior(
             "action": str(action),
             "adaptive_flags": ctx["flags"],
             "correlation": correlation_reason,
+            "ml_label": ml_label,
+            "ml_confidence": ml_confidence,
+            "ml_override": ml_override,
         })
-        _log_decision(
-            user_id=user_id,
-            ip=ip or "unknown",
-            action=action,
-            score=final_score,
-            decision=decision,
-            razones=razon_str,
-            adaptive_flags=ctx["flags"],
-            recon_correlated=bool(correlation_reason),
-            history_len=len(history),
-            long_history_len=len(long_history),
-        )
-        return {
-            "decision": decision,
+    else:
+        logger.info("agent_defender", extra={
+            "user_id": user_id,
             "score": final_score,
-            "razon": razon_str,
-            "adaptive_flags": ctx["flags"],
-        }
+            "ip": ip,
+            "action": str(action),
+            "ml_label": ml_label,
+            "ml_confidence": ml_confidence,
+        })
 
-    logger.info("agent_defender", extra={
-        "user_id": user_id,
-        "score": final_score,
-        "ip": ip,
-        "action": str(action),
-    })
     _log_decision(
         user_id=user_id,
         ip=ip or "unknown",
         action=action,
         score=final_score,
-        decision="NORMAL",
-        razones="comportamiento normal",
+        decision=decision,
+        razones=razon_str,
         adaptive_flags=ctx["flags"],
-        recon_correlated=False,
+        recon_correlated=bool(correlation_reason),
         history_len=len(history),
         long_history_len=len(long_history),
     )
+
     return {
-        "decision": "NORMAL",
+        "decision": decision,
         "score": final_score,
-        "razon": "comportamiento normal",
+        "razon": razon_str,
         "adaptive_flags": ctx["flags"],
+        "ml_label": ml_label,
+        "ml_confidence": ml_confidence,
     }
 
 # ─── Logging a PostgreSQL ─────────────────────────────────────────────────────
 
 from api.db.database import SessionLocal
 from api.models.agent_decision import AgentDecision
-from datetime import datetime, timezone
 
 def _log_decision(
     user_id: str,
