@@ -244,6 +244,18 @@ async def analyze_behavior(
             "adaptive_flags": ctx["flags"],
             "correlation": correlation_reason,
         })
+        _log_decision(
+            user_id=user_id,
+            ip=ip or "unknown",
+            action=action,
+            score=final_score,
+            decision=decision,
+            razones=razon_str,
+            adaptive_flags=ctx["flags"],
+            recon_correlated=bool(correlation_reason),
+            history_len=len(history),
+            long_history_len=len(long_history),
+        )
         return {
             "decision": decision,
             "score": final_score,
@@ -257,9 +269,62 @@ async def analyze_behavior(
         "ip": ip,
         "action": str(action),
     })
+    _log_decision(
+        user_id=user_id,
+        ip=ip or "unknown",
+        action=action,
+        score=final_score,
+        decision="NORMAL",
+        razones="comportamiento normal",
+        adaptive_flags=ctx["flags"],
+        recon_correlated=False,
+        history_len=len(history),
+        long_history_len=len(long_history),
+    )
     return {
         "decision": "NORMAL",
         "score": final_score,
         "razon": "comportamiento normal",
         "adaptive_flags": ctx["flags"],
     }
+
+# ─── Logging a PostgreSQL ─────────────────────────────────────────────────────
+
+from api.db.database import SessionLocal
+from api.models.agent_decision import AgentDecision
+from datetime import datetime, timezone
+
+def _log_decision(
+    user_id: str,
+    ip: str,
+    action: dict,
+    score: float,
+    decision: str,
+    razones: str,
+    adaptive_flags: list,
+    recon_correlated: bool,
+    history_len: int,
+    long_history_len: int,
+) -> None:
+    try:
+        db = SessionLocal()
+        record = AgentDecision(
+            user_id=user_id,
+            ip=ip,
+            timestamp=datetime.now(timezone.utc),
+            action_method=action.get("method"),
+            action_path=action.get("path"),
+            score=score,
+            decision=decision,
+            razones=razones,
+            adaptive_flags=",".join(adaptive_flags) if adaptive_flags else "",
+            recon_correlated=recon_correlated,
+            history_len=history_len,
+            long_history_len=long_history_len,
+        )
+        db.add(record)
+        db.commit()
+    except Exception as e:
+        logger.error("ml_log_error", extra={"error": str(e)})
+    finally:
+        db.close()
