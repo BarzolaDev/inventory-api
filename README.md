@@ -1,19 +1,27 @@
-## ML Security Layer
-
-- Random Forest entrenado con tráfico sintético (NORMAL/SOSPECHOSO/BLOQUEADO)
-- SMOTE para balanceo de clases
-- `ml_predictor.py` carga el modelo y asiste a `agent_defender.py` en tiempo real
-- Override automático si confianza >= 85%
-- Feedback loop: cada request queda en DB → próximo entrenamiento mejora el modelo
-
-
 # ⚙️ Inventory Management API
 
-Production-oriented REST API built with FastAPI, focused on one thing:
+Production-oriented REST API built with FastAPI, focused on two things:
 
 👉 Keeping data consistent under concurrent operations.
+👉 Learning to defend itself from attacks in real time.
 
-Because real systems don't fail on CRUD — they fail under race conditions.
+---
+
+## 🤖 ML Security Layer
+
+A behavioral analysis system that learns from every request.
+
+```
+Request → Logs (eyes) → PostgreSQL (memory) → Random Forest (reasoning) → Block or Allow
+```
+
+- Random Forest trained on synthetic traffic (NORMAL / SUSPICIOUS / BLOCKED)
+- SMOTE for class balancing
+- `ml_predictor.py` loads the model and assists `agent_defender.py` in real time
+- Auto-override if model confidence ≥ 85%
+- **Feedback loop**: every request is stored in DB → next training cycle improves the model
+
+The model doesn't just block known attacks — it learns patterns and blocks what the rules didn't anticipate.
 
 ---
 
@@ -131,9 +139,10 @@ Business rules enforced in the service layer:
   - Repeated stock manipulation detection
   - Decisions: `NORMAL` / `SUSPICIOUS` / `BLOCKED`
   - **Dual blacklist**: IP-based (1h TTL) + user_id-based (1h or 24hs based on score) — proxy-resistant
-  - - **Long-term memory (24hs)**: cross-session tracking — detects attackers who recon first, attack later
+  - **Long-term memory (24hs)**: cross-session tracking — detects attackers who recon first, attack later
   - **Recon/attack correlation**: if ≥2 recon signals in long_history (24hs) + active attack now → score ×3.0 multiplier
-  - **Adaptive thresholds**: block thresholds adjust dynamically based on time of day (night = stricter), system-wide attack pressure (global block counter in Redis), and       recidivism — thresholds can drop up to 66% for high-risk contexts
+  - **Adaptive thresholds**: block thresholds adjust dynamically based on time of day (night = stricter), system-wide attack pressure (global block counter in Redis), and recidivism — thresholds can drop up to 66% for high-risk contexts
+  - **ML layer**: Random Forest model trained on real traffic assists decisions in real time — auto-override at ≥85% confidence
 
 ### 🛡 OWASP Top 10 Coverage
 - **A01 Broken Access Control** → owner_id enforced on all product endpoints (list, get, movements) — users only see their own data. Generic 404 on all not-found responses to avoid confirming resource existence
@@ -201,7 +210,8 @@ Production-scale solution implemented: PgBouncer with transaction pooling (max 1
 FastAPI · PostgreSQL · SQLAlchemy ·
 Pydantic · Argon2 · JWT · Alembic ·
 Docker · Redis · Pytest · Testcontainers ·
-GitHub Actions · Nginx · ModSecurity · PgBouncer
+GitHub Actions · Nginx · ModSecurity · PgBouncer ·
+scikit-learn · Random Forest · SMOTE
 
 ---
 
@@ -209,6 +219,5 @@ GitHub Actions · Nginx · ModSecurity · PgBouncer
 
 This project is not about building an API that works.
 
-It's about building one that keeps working
+It's about building one that keeps working — and keeps learning —
 when multiple things happen at the same time.
-EOF
