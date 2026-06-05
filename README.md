@@ -14,9 +14,8 @@ A behavioral analysis system that learns from every request.
 ```
 Request → Logs (eyes) → PostgreSQL (memory) → Random Forest (reasoning) → Block or Allow
 ```
-
 - Random Forest trained on synthetic traffic (NORMAL / SUSPICIOUS / BLOCKED)
-- SMOTE for class balancing
+- `class_weight="balanced"` to handle class imbalance
 - `ml_predictor.py` loads the model and assists `agent_defender.py` in real time
 - Auto-override if model confidence ≥ 85%
 - **Feedback loop**: every request is stored in DB → next training cycle improves the model
