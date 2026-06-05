@@ -10,3 +10,5 @@ test.db
 .pytest_cache/
 .env.docker*
 .pkl
+*.pkl
+report.txt
