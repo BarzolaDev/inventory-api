@@ -22,6 +22,15 @@ Request → Logs (eyes) → PostgreSQL (memory) → Random Forest (reasoning) �
 
 The model doesn't just block known attacks — it learns patterns and blocks what the rules didn't anticipate.
 
+### 📊 Model Performance (trained on 6,672 requests)
+| Class       | F1-Score | Notes |
+|-------------|----------|-------|
+| NORMAL      | 0.93     | Clean browsing patterns |
+| BLOQUEADO   | 0.96     | High-confidence attack detection |
+| SOSPECHOSO  | 0.45     | Intentionally hard — this is a transitional state that escalates to BLOQUEADO quickly, so few samples exist by design |
+
+Overall accuracy: **92%**
+
 ---
 
 ## 🌍 Live Demo
