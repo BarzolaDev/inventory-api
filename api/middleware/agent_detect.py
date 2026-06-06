@@ -112,7 +112,7 @@ class AgentDetectMiddleware(BaseHTTPMiddleware):
 
         result = await analyze_behavior(user_id, action, history, ip, long_history)
 
-        if False and result["decision"] in ("SOSPECHOSO", "BLOQUEADO"):
+        if result["decision"] == "BLOQUEADO":
             if ip:
                 await redis.setex(f"blocked:{ip}", BLOCK_TTL, "agent_defender")
             logger.warning("agent_defender_blocked", extra={
