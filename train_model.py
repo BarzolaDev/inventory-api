@@ -44,6 +44,7 @@ FEATURES = [
     "recon_correlated", "history_len", "long_history_len",
     "method_enc", "path_enc",
     "flag_night", "flag_pressure", "flag_recidivist",
+    "razon_0", "razon_1", "razon_2", "razon_3", "razon_4", "razon_5",
 ]
 
 X = df[FEATURES]
