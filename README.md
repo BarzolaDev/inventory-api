@@ -219,7 +219,7 @@ FastAPI · PostgreSQL · SQLAlchemy ·
 Pydantic · Argon2 · JWT · Alembic ·
 Docker · Redis · Pytest · Testcontainers ·
 GitHub Actions · Nginx · ModSecurity · PgBouncer ·
-scikit-learn · Random Forest · SMOTE · Grafana
+scikit-learn · Random Forest · SMOTE
 
 ---
 
@@ -231,13 +231,3 @@ It's about building one that keeps working — and keeps learning —
 when multiple things happen at the same time.
 ---
 
-## 📊 Observability
-
-All agent decisions are logged to PostgreSQL and visualized in real time via **Grafana**:
-
-- Decision distribution (NORMAL / SUSPICIOUS / BLOCKED)
-- Attack timeline — spikes, off-hours activity
-- Top blocked IPs
-- ML override rate — how often the model corrects the rules
-
-The feedback loop is complete: every request trains the next model iteration.
