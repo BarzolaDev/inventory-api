@@ -12,3 +12,4 @@ test.db
 .pkl
 *.pkl
 report.txt
+dataset_full.csv
