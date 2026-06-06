@@ -45,4 +45,4 @@ app.add_middleware(
 app.include_router(product.router, prefix="/products", tags=["Products"])
 app.include_router(user.router, prefix="/users", tags=["Users"])
 app.include_router(decisions.router, prefix="/decisions", tags=["Decisions"])
-app.mount('/static', StaticFiles(directory='static'), name='static')
+#app.mount('/static', StaticFiles(directory='static'), name='static')
