@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Defender — Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #0f0f1a;
+    --surface2: #141428;
+    --border: #1e1e3a;
+    --accent: #00ff88;
+    --warn: #ffaa00;
+    --danger: #ff3366;
+    --normal: #00aaff;
+    --text: #e0e0ff;
+    --muted: #555580;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.02) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow top */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0,255,136,0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ─── Header ─── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 20px 0;
+    margin-bottom: 40px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 16px;
+    position: relative;
+  }
+
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(0,255,136,0.3);
+  }
+
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+  }
+
+  .logo-text span {
+    color: var(--accent);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+    50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(0,255,136,0); }
+  }
+
+  /* ─── Login ─── */
+  #login-view {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 120px);
+  }
+
+  .login-box {
+    width: 380px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 40px;
+  }
+
+  .login-box h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+  }
+
+  .login-box p {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    margin-bottom: 32px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus {
+    border-color: var(--accent);
+  }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: opacity 0.2s;
+  }
+
+  .btn-primary:hover { opacity: 0.85; }
+
+  .error-msg {
+    color: var(--danger);
+    font-size: 11px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* ─── Dashboard ─── */
+  #dashboard-view { display: none; }
+
+  /* Stats cards */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .stat-card {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .stat-card.total::before  { background: var(--muted); }
+  .stat-card.blocked::before { background: var(--danger); }
+  .stat-card.normal::before  { background: var(--normal); }
+  .stat-card.recon::before   { background: var(--warn); }
+
+  .stat-card:nth-child(1) { animation-delay: 0.05s; }
+  .stat-card:nth-child(2) { animation-delay: 0.1s; }
+  .stat-card:nth-child(3) { animation-delay: 0.15s; }
+  .stat-card:nth-child(4) { animation-delay: 0.2s; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .stat-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .stat-value {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-card.blocked .stat-value { color: var(--danger); }
+  .stat-card.normal  .stat-value { color: var(--normal); }
+  .stat-card.recon   .stat-value { color: var(--warn); }
+
+  .stat-pct {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ─── Chart bar ─── */
+  .chart-section {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 28px;
+    margin-bottom: 32px;
+    animation: fadeIn 0.4s ease 0.25s forwards;
+    opacity: 0;
+  }
+
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 80px;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 0;
+    transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    cursor: pointer;
+  }
+
+  .bar:hover::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+    margin-bottom: 4px;
+  }
+
+  .bar.b { background: var(--danger); opacity: 0.8; }
+  .bar.n { background: var(--normal); opacity: 0.8; }
+  .bar.s { background: var(--warn); opacity: 0.8; }
+
+  /* ─── Filters ─── */
+  .filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .filter-btn.danger.active  { border-color: var(--danger); color: var(--danger); }
+  .filter-btn.warn.active    { border-color: var(--warn);   color: var(--warn); }
+  .filter-btn.info.active    { border-color: var(--normal); color: var(--normal); }
+
+  .refresh-btn {
+    margin-left: auto;
+    padding: 6px 14px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    transition: all 0.15s;
+  }
+
+  .refresh-btn:hover { background: rgba(0,255,136,0.08); }
+
+  /* ─── Table ─── */
+  .table-section {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    animation: fadeIn 0.4s ease 0.3s forwards;
+    opacity: 0;
+  }
+
+  .table-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid rgba(30,30,58,0.5);
+    transition: background 0.15s;
+  }
+
+  tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+  tbody td {
+    padding: 12px 16px;
+    font-size: 12px;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+  }
+
+  .badge.BLOQUEADO  { color: var(--danger); border: 1px solid rgba(255,51,102,0.3); background: rgba(255,51,102,0.08); }
+  .badge.SOSPECHOSO { color: var(--warn);   border: 1px solid rgba(255,170,0,0.3);  background: rgba(255,170,0,0.08); }
+  .badge.NORMAL     { color: var(--normal); border: 1px solid rgba(0,170,255,0.3);  background: rgba(0,170,255,0.08); }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .score-track {
+    width: 60px;
+    height: 3px;
+    background: var(--border);
+    position: relative;
+  }
+
+  .score-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    transition: width 0.4s;
+  }
+
+  .score-fill.high { background: var(--danger); }
+  .score-fill.mid  { background: var(--warn); }
+
+  .ip-text { color: var(--muted); font-size: 11px; }
+  .path-text { color: var(--text); }
+  .method { color: var(--muted); font-size: 10px; margin-right: 6px; }
+  .method.POST { color: #aa88ff; }
+  .method.GET  { color: #44aaff; }
+  .method.DELETE { color: var(--danger); }
+
+  .recon-tag {
+    font-size: 10px;
+    color: var(--warn);
+    border: 1px solid rgba(255,170,0,0.3);
+    padding: 1px 5px;
+    margin-left: 4px;
+  }
+
+  .ts-text { color: var(--muted); font-size: 11px; }
+
+  /* Loading */
+  .loading {
+    text-align: center;
+    padding: 60px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+  }
+
+  .loading::before {
+    content: '⟳ ';
+    animation: spin 1s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 60px; color: var(--muted); font-size: 11px; }
+
+  /* Pagination */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .page-btns { display: flex; gap: 4px; }
+
+  .page-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .page-btn:disabled { opacity: 0.3; cursor: default; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">⬡</div>
+        <div>
+          <div class="logo-text">AGENT<span>DEFENDER</span></div>
+          <div class="logo-sub">Behavioral Intelligence Dashboard</div>
+        </div>
+      </div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="status-text">OFFLINE</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- LOGIN -->
+<div class="container" id="login-view">
+  <div class="login-box">
+    <h2>Access Required</h2>
+    <p>AUTHENTICATE TO CONTINUE</p>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email-input" placeholder="user@domain.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="pass-input" placeholder="••••••••" />
+    </div>
+    <button class="btn-primary" onclick="doLogin()">AUTHENTICATE</button>
+    <div class="error-msg" id="login-error">Authentication failed</div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="container" id="dashboard-view">
+
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-label">Total Decisions</div>
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-pct">all time</div>
+    </div>
+    <div class="stat-card blocked">
+      <div class="stat-label">Blocked</div>
+      <div class="stat-value" id="stat-blocked">—</div>
+      <div class="stat-pct" id="pct-blocked">—</div>
+    </div>
+    <div class="stat-card normal">
+      <div class="stat-label">Normal</div>
+      <div class="stat-value" id="stat-normal">—</div>
+      <div class="stat-pct" id="pct-normal">—</div>
+    </div>
+    <div class="stat-card recon">
+      <div class="stat-label">Recon Correlated</div>
+      <div class="stat-value" id="stat-recon">—</div>
+      <div class="stat-pct">recon → attack</div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <div class="section-title">Decision Distribution</div>
+    <div class="bar-chart" id="bar-chart"></div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <div class="filters">
+        <button class="filter-btn active" onclick="setFilter(null, this)">ALL</button>
+        <button class="filter-btn danger" onclick="setFilter('BLOQUEADO', this)">BLOQUEADO</button>
+        <button class="filter-btn warn" onclick="setFilter('SOSPECHOSO', this)">SOSPECHOSO</button>
+        <button class="filter-btn info" onclick="setFilter('NORMAL', this)">NORMAL</button>
+        <button class="refresh-btn" onclick="loadDecisions()">↻ REFRESH</button>
+      </div>
+    </div>
+
+    <div id="table-body">
+      <div class="loading">LOADING DECISIONS</div>
+    </div>
+
+    <div class="pagination">
+      <span id="page-info">—</span>
+      <div class="page-btns">
+        <button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>← PREV</button>
+        <button class="page-btn" id="btn-next" onclick="changePage(1)" disabled>NEXT →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const API = 'http://localhost:8000';
+  let TOKEN = localStorage.getItem('defender_token') || null;
+  let currentFilter = null;
+  let currentOffset = 0;
+  const PAGE_SIZE = 20;
+  let totalRows = 0;
+
+  // ─── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    if (TOKEN) showDashboard();
+  });
+
+  document.getElementById('pass-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+
+  // ─── Login ──────────────────────────────────────────────────────────────────
+  async function doLogin() {
+    const email = document.getElementById('email-input').value.trim();
+    const pass  = document.getElementById('pass-input').value;
+    const err   = document.getElementById('login-error');
+    err.style.display = 'none';
+
+    try {
+      const res = await fetch(`${API}/users/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: `username=${encodeURIComponent(email)}&password=${encodeURIComponent(pass)}`
+      });
+      const data = await res.json();
+      if (!data.access_token) throw new Error();
+      TOKEN = data.access_token;
+      localStorage.setItem('defender_token', TOKEN);
+      showDashboard();
+    } catch {
+      err.style.display = 'block';
+    }
+  }
+
+  // ─── Show dashboard ─────────────────────────────────────────────────────────
+  function showDashboard() {
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('dashboard-view').style.display = 'block';
+    document.getElementById('status-text').textContent = 'ONLINE';
+    loadStats();
+    loadDecisions();
+  }
+
+  // ─── Stats ──────────────────────────────────────────────────────────────────
+  async function loadStats() {
+    try {
+      const res  = await authFetch('/decisions/stats');
+      const data = await res.json();
+
+      const total   = data.total   || 0;
+      const blocked = data.bloqueado || 0;
+      const normal  = data.normal  || 0;
+      const recon   = data.recon_correlated || 0;
+
+      animateCount('stat-total',   total);
+      animateCount('stat-blocked', blocked);
+      animateCount('stat-normal',  normal);
+      animateCount('stat-recon',   recon);
+
+      document.getElementById('pct-blocked').textContent =
+        total ? `${((blocked/total)*100).toFixed(1)}% of total` : '—';
+      document.getElementById('pct-normal').textContent =
+        total ? `${((normal/total)*100).toFixed(1)}% of total` : '—';
+
+      totalRows = total;
+      renderBarChart(blocked, normal, total - blocked - normal);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function animateCount(id, target) {
+    const el = document.getElementById(id);
+    const duration = 600;
+    const start = Date.now();
+    const tick = () => {
+      const p = Math.min((Date.now() - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(ease * target).toLocaleString();
+      if (p < 1) requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function renderBarChart(blocked, normal, suspicious) {
+    const container = document.getElementById('bar-chart');
+    const max = Math.max(blocked, normal, suspicious, 1);
+    const count = 60;
+    container.innerHTML = '';
+
+    // Simulate distribution across bars
+    const data = Array.from({length: count}, (_, i) => {
+      const t = i / count;
+      if (t < blocked / (blocked + normal + suspicious))
+        return { type: 'b', val: Math.random() * 0.4 + 0.6 };
+      else if (t < (blocked + suspicious) / (blocked + normal + suspicious))
+        return { type: 's', val: Math.random() * 0.4 + 0.4 };
+      else
+        return { type: 'n', val: Math.random() * 0.4 + 0.5 };
+    }).sort(() => Math.random() - 0.5);
+
+    data.forEach(d => {
+      const bar = document.createElement('div');
+      bar.className = `bar ${d.type}`;
+      bar.style.height = `${d.val * 80}px`;
+      const label = d.type === 'b' ? 'BLOQUEADO' : d.type === 's' ? 'SOSPECHOSO' : 'NORMAL';
+      bar.setAttribute('data-label', label);
+      container.appendChild(bar);
+    });
+  }
+
+  // ─── Decisions table ────────────────────────────────────────────────────────
+  async function loadDecisions() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '<div class="loading">LOADING DECISIONS</div>';
+
+    try {
+      let url = `/decisions/?limit=${PAGE_SIZE}`;
+      if (currentFilter) url += `&decision=${currentFilter}`;
+      if (currentOffset)  url += `&offset=${currentOffset}`;
+
+      const res  = await authFetch(url);
+      const data = await res.json();
+      const rows = Array.isArray(data) ? data : (data.items || []);
+
+      if (!rows.length) {
+        tbody.innerHTML = '<div class="empty">NO DECISIONS FOUND</div>';
+        updatePagination(0);
+        return;
+      }
+
+      renderTable(rows, tbody);
+      updatePagination(rows.length);
+    } catch (e) {
+      tbody.innerHTML = '<div class="empty">ERROR LOADING DATA</div>';
+    }
+  }
+
+  function renderTable(rows, container) {
+    const html = `
+      <table>
+        <thead>
+          <tr>
+            <th>Decision</th>
+            <th>Score</th>
+            <th>User</th>
+            <th>IP</th>
+            <th>Action</th>
+            <th>Razones</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const score = r.score || 0;
+            const scoreClass = score >= 90 ? 'high' : score >= 60 ? 'mid' : '';
+            const pct = Math.min(score / 100 * 100, 100);
+            const ts = r.timestamp ? new Date(r.timestamp).toLocaleString('es-AR', {
+              month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit'
+            }) : '—';
+            const recon = r.recon_correlated
+              ? '<span class="recon-tag">RECON</span>' : '';
+            const razones = r.razones
+              ? r.razones.substring(0, 40) + (r.razones.length > 40 ? '…' : '')
+              : '—';
+            const method = r.action_method || 'GET';
+            return `
+              <tr>
+                <td><span class="badge ${r.decision}">${r.decision}</span></td>
+                <td>
+                  <div class="score-bar">
+                    <span style="width:32px">${score.toFixed(0)}</span>
+                    <div class="score-track">
+                      <div class="score-fill ${scoreClass}" style="width:${pct}%"></div>
+                    </div>
+                  </div>
+                </td>
+                <td style="color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${r.user_id || 'anonymous'}</td>
+                <td class="ip-text">${r.ip || '—'}</td>
+                <td>
+                  <span class="method ${method}">${method}</span>
+                  <span class="path-text">${(r.action_path || '/').substring(0, 20)}</span>
+                  ${recon}
+                </td>
+                <td style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.razones || ''}">${razones}</td>
+                <td class="ts-text">${ts}</td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+    container.innerHTML = html;
+  }
+
+  function updatePagination(rowCount) {
+    document.getElementById('page-info').textContent =
+      `Showing ${currentOffset + 1}–${currentOffset + rowCount}`;
+    document.getElementById('btn-prev').disabled = currentOffset === 0;
+    document.getElementById('btn-next').disabled = rowCount < PAGE_SIZE;
+  }
+
+  function changePage(dir) {
+    currentOffset = Math.max(0, currentOffset + dir * PAGE_SIZE);
+    loadDecisions();
+  }
+
+  function setFilter(val, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilter = val;
+    currentOffset = 0;
+    loadDecisions();
+  }
+
+  // ─── Auth fetch ─────────────────────────────────────────────────────────────
+  async function authFetch(path) {
+    const res = await fetch(`${API}${path}`, {
+      headers: { 'Authorization': `Bearer ${TOKEN}` }
+    });
+    if (res.status === 401 || res.status === 403) {
+      TOKEN = null;
+      localStorage.removeItem('defender_token');
+      location.reload();
+    }
+    return res;
+  }
+</script>
+</body>
+</html>

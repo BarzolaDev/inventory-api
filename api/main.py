@@ -1,12 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from api.middleware.rate_limit import RateLimitMiddleware
 from api.middleware.logging import LoggingMiddleware
 from api.middleware.agent_detect import AgentDetectMiddleware
-from api.routes import product, user
+from api.routes import product, user, decisions
 from api.core.redis_client import init_redis, close_redis
 from api.core.settings import settings
 import api.core.logging
@@ -43,3 +44,5 @@ app.add_middleware(
 )
 app.include_router(product.router, prefix="/products", tags=["Products"])
 app.include_router(user.router, prefix="/users", tags=["Users"])
+app.include_router(decisions.router, prefix="/decisions", tags=["Decisions"])
+app.mount('/static', StaticFiles(directory='static'), name='static')
