@@ -35,8 +35,8 @@ Overall accuracy: **92%**
 
 ## 🌍 Live Demo
 
-Interactive API documentation:
-https://inventory-api-kbvx.onrender.com/docs
+Live API endpoint:
+https://inventory-api-kbvx.onrender.com
 
 ---
 
